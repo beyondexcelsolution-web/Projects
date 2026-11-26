@@ -14,9 +14,20 @@ GITHUB_OWNER = "beyondexcelsolution-web"
 GITHUB_REPO = "Projects"
 REMOTE_URL = f"https://github.com/{GITHUB_OWNER}/{GITHUB_REPO}.git"
 
+def get_git_cmd():
+    import shutil
+    git_which = shutil.which('git')
+    if git_which:
+        return git_which
+    mingit_path = r'C:\Users\pramo\AppData\Local\Programs\MinGit\cmd\git.exe'
+    if os.path.exists(mingit_path):
+        return mingit_path
+    return 'git'
+
 def run_git_cmd(args):
+    git_bin = get_git_cmd()
     try:
-        res = subprocess.run(['git'] + args, cwd=SCRIPT_DIR, capture_output=True, text=True)
+        res = subprocess.run([git_bin] + args, cwd=SCRIPT_DIR, capture_output=True, text=True)
         return res.returncode == 0, res.stdout.strip(), res.stderr.strip()
     except FileNotFoundError:
         return False, "", "git command not found"
