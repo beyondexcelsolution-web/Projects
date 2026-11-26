@@ -1,0 +1,467 @@
+{% extends 'base.html' %}
+{% set active_page = 'students' %}
+
+{% block title %}Students Directory - Crescent Islamic High School{% endblock %}
+
+{% block content %}
+<div class="students-wrapper">
+    <!-- Top Action Bar -->
+    <div style="background: #FFFFFF; border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: var(--shadow-sm);">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem;">
+            <div>
+                <h2 style="font-size: 1.4rem; font-weight: 800; color: #0F172A; margin: 0;">Students Directory &amp; Roster</h2>
+                <p style="font-size: 0.84rem; color: #64748B; margin-top: 0.2rem;">Showing <strong>{{ students | length }}</strong> student(s) &bull; Filter by name, admission no, roll, class, gender, or campus block.</p>
+            </div>
+            <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
+                <button type="button" class="btn btn-outline" onclick="openModal('uploadModal')">📥 Import from Excel</button>
+                <button type="button" class="btn btn-primary" onclick="openModal('addStudentModal')">➕ Add New Student</button>
+            </div>
+        </div>
+
+        <!-- Multi-Parameter Filter & Search Form -->
+        <form method="GET" action="{{ url_for('students') }}" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem; align-items: end;">
+            <div style="grid-column: span 2; min-width: 240px;">
+                <label class="form-label" style="font-size: 0.78rem; margin-bottom: 0.25rem;">🔍 Search Student</label>
+                <input type="text" id="studentSearchInput" name="q" class="form-control" placeholder="Search by Name, Adm No, Roll..." value="{{ q }}">
+            </div>
+
+            <div>
+                <label class="form-label" style="font-size: 0.78rem; margin-bottom: 0.25rem;">🏫 Class / Grade</label>
+                <select name="class" class="form-control" onchange="this.form.submit()">
+                    <option value="">All Classes</option>
+                    {% for c in classes %}
+                    <option value="{{ c }}" {% if current_class == c %}selected{% endif %}>Class {{ c }}</option>
+                    {% endfor %}
+                    {% for g in groups %}
+                    <option value="{{ g }}" {% if current_class == g %}selected{% endif %}>Group: {{ g }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label class="form-label" style="font-size: 0.78rem; margin-bottom: 0.25rem;">👤 Gender</label>
+                <select name="gender" class="form-control" onchange="this.form.submit()">
+                    <option value="">All Genders</option>
+                    <option value="M" {% if current_gender == 'M' %}selected{% endif %}>Boys (Male - M)</option>
+                    <option value="F" {% if current_gender == 'F' %}selected{% endif %}>Girls (Female - F)</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="form-label" style="font-size: 0.78rem; margin-bottom: 0.25rem;">🏢 Campus Block</label>
+                <select name="block" class="form-control" onchange="this.form.submit()">
+                    <option value="">All Blocks</option>
+                    {% for b in blocks %}
+                    <option value="{{ b }}" {% if current_block == b %}selected{% endif %}>{{ b }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div style="display: flex; gap: 0.5rem;">
+                <button type="submit" class="btn btn-primary" style="flex: 1; padding: 0.55rem 1rem;">Filter</button>
+                {% if q or current_class or current_gender or current_block %}
+                <a href="{{ url_for('students') }}" class="btn btn-outline" style="padding: 0.55rem 0.85rem;" title="Reset all filters">Reset</a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <!-- Bulk Actions Control Bar -->
+    <div id="bulkActionsBar" style="display: flex; align-items: center; justify-content: space-between; background: #F8FAFC; border: 1px solid #CBD5E1; padding: 0.75rem 1.25rem; border-radius: var(--radius-lg); margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <label style="display: flex; align-items: center; gap: 0.45rem; font-weight: 700; color: #0F172A; cursor: pointer; user-select: none; margin: 0; font-size: 0.9rem;">
+                <input type="checkbox" id="masterCheckbox" onchange="toggleSelectAll(this.checked)" style="width: 18px; height: 18px; cursor: pointer;">
+                Select All Students
+            </label>
+            <span style="color: #64748B; font-size: 0.85rem;">|</span>
+            <span style="font-size: 0.88rem; color: #1E40AF; font-weight: 600;">
+                Selected: <strong id="selectedCount" style="font-size: 1.05rem; color: #2563EB;">0</strong> of {{ students|length }}
+            </span>
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+            <button type="button" class="btn btn-sm btn-outline" onclick="toggleSelectAll(true)">Check All</button>
+            <button type="button" class="btn btn-sm btn-outline" onclick="toggleSelectAll(false)">Uncheck All</button>
+            <button type="button" id="bulkDeleteBtn" class="btn btn-sm btn-danger" onclick="confirmBulkDelete()" disabled style="font-weight: 700; padding: 0.4rem 1rem;">
+                🗑️ Delete Selected
+            </button>
+        </div>
+    </div>
+
+    <!-- Hidden Bulk Delete Form -->
+    <form id="bulkDeleteForm" method="POST" action="{{ url_for('bulk_delete_students') }}" style="display: none;">
+        <input type="hidden" name="ids_csv" id="bulkDeleteIdsInput">
+    </form>
+
+    <!-- Students Table -->
+    <div style="background: #FFFFFF; border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 2rem; box-shadow: var(--shadow-sm);">
+        <div class="table-responsive">
+            <table class="table" id="studentsTable">
+                <thead>
+                    <tr>
+                        <th style="width: 40px; text-align: center;">
+                            <input type="checkbox" id="tableHeaderCheckbox" onchange="toggleSelectAll(this.checked)" style="width: 17px; height: 17px; cursor: pointer;">
+                        </th>
+                        <th style="width: 85px;">Adm No</th>
+                        <th>Student Name</th>
+                        <th>Class</th>
+                        <th>Seating Group</th>
+                        <th style="text-align: center;">Roll (Class)</th>
+                        <th style="text-align: center;">Roll (Group)</th>
+                        <th style="text-align: center;">Gender</th>
+                        <th>Block</th>
+                        <th>Subjects</th>
+                        <th style="text-align: right; width: 140px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in students %}
+                    <tr class="student-row" data-name="{{ s.name | lower }}" data-adm="{{ s.adm_no | lower }}" data-class="{{ s.class_name | lower }}">
+                        <td style="text-align: center; vertical-align: middle;">
+                            <input type="checkbox" class="student-select" value="{{ s.id }}" onchange="updateSelectedCount()" style="width: 17px; height: 17px; cursor: pointer;">
+                        </td>
+                        <td>
+                            <code style="font-weight: 700; color: #2563EB; background: #EFF6FF; padding: 2px 6px; border-radius: 4px;">{{ s.adm_no }}</code>
+                        </td>
+                        <td>
+                            <strong style="color: #0F172A;">{{ s.name }}</strong>
+                        </td>
+                        <td>
+                            <span class="badge badge-gray">{{ s.class_name }}</span>
+                        </td>
+                        <td>
+                            {% if s.seating_group %}
+                                <span class="badge badge-blue">{{ s.seating_group }}</span>
+                            {% else %}
+                                <span style="color: #94A3B8;">—</span>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: center; font-weight: 600;">{{ s.roll_in_class }}</td>
+                        <td style="text-align: center; font-weight: 700; color: #1E40AF;">{{ s.roll_in_group }}</td>
+                        <td style="text-align: center;">
+                            <span class="badge {% if s.gender == 'F' %}badge-purple{% else %}badge-blue{% endif %}">
+                                {{ s.gender }}
+                            </span>
+                        </td>
+                        <td>
+                            <span style="font-size: 0.8rem; color: #64748B;">{{ s.block }}</span>
+                        </td>
+                        <td>
+                            {% if s.is_hifz %}
+                                <span class="badge badge-green" title="Hifz Student">Hifz</span>
+                            {% endif %}
+                            {% if s.is_hindi %}
+                                <span class="badge badge-amber" title="Hindi Subject">Hindi</span>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: right;">
+                            <button type="button" class="btn btn-sm btn-outline" onclick="openEditModal({{ s | tojson | forceescape }})">✏️ Edit</button>
+                            <form action="{{ url_for('delete_student', student_id=s.id) }}" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete student {{ s.name }} ({{ s.adm_no }})?');">
+                                <button type="submit" class="btn btn-sm btn-outline" style="color: #EF4444; border-color: #FECACA;">🗑️</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="10" style="text-align: center; padding: 2rem; color: #64748B;">
+                            No students found matching your criteria.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Add Student (Full Manual Detail Fillup) -->
+<div id="addStudentModal" class="modal-backdrop" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1050; align-items: center; justify-content: center;">
+    <div style="background: #FFFFFF; border-radius: 12px; max-width: 560px; width: 92%; max-height: 90vh; overflow-y: auto; padding: 1.75rem; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+            <h3 style="font-size: 1.15rem; font-weight: 700; color: #0F172A; margin: 0;">➕ Add New Student (Manual Entry)</h3>
+            <button type="button" class="modal-close" onclick="closeModal('addStudentModal')">&times;</button>
+        </div>
+
+        <form method="POST" action="{{ url_for('add_student') }}">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label class="form-label" for="add_adm_no">Admission No <span style="color: #EF4444;">*</span></label>
+                    <input type="text" id="add_adm_no" name="adm_no" class="form-control" required placeholder="e.g. 10245">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="add_name">Full Name <span style="color: #EF4444;">*</span></label>
+                    <input type="text" id="add_name" name="name" class="form-control" required placeholder="Student Name">
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label class="form-label" for="add_class_name">Class / Grade <span style="color: #EF4444;">*</span></label>
+                    <input type="text" id="add_class_name" name="class_name" class="form-control" required placeholder="e.g. 6A, 10B, 11">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="add_seating_group">Seating Group (Optional)</label>
+                    <input type="text" id="add_seating_group" name="seating_group" class="form-control" placeholder="e.g. 11 G, 12 B">
+                </div>
+            </div>
+
+            <!-- Manual Roll Numbers -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label class="form-label" for="add_roll_in_class">Roll in Class (Optional)</label>
+                    <input type="number" id="add_roll_in_class" name="roll_in_class" class="form-control" min="1" placeholder="Auto if empty">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="add_roll_in_group">Roll in Group (Optional)</label>
+                    <input type="number" id="add_roll_in_group" name="roll_in_group" class="form-control" min="1" placeholder="Auto if empty">
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label class="form-label" for="add_gender">Gender</label>
+                    <select id="add_gender" name="gender" class="form-control">
+                        <option value="M">Male (Boy)</option>
+                        <option value="F">Female (Girl)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="add_block">Campus Block</label>
+                    <select id="add_block" name="block" class="form-control">
+                        <option value="Boys Block">Boys Block</option>
+                        <option value="Girls Block">Girls Block</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 1.5rem; margin: 0.75rem 0 1.25rem;">
+                <label style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; cursor: pointer;">
+                    <input type="checkbox" name="is_hifz" value="1"> Hifz Student
+                </label>
+                <label style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; cursor: pointer;">
+                    <input type="checkbox" name="is_hindi" value="1"> Hindi Subject
+                </label>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 0.6rem;">
+                <button type="button" class="btn btn-outline" onclick="closeModal('addStudentModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Student</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Edit Student -->
+<div id="editStudentModal" class="modal-backdrop" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1050; align-items: center; justify-content: center;">
+    <div style="background: #FFFFFF; border-radius: 12px; max-width: 560px; width: 92%; max-height: 90vh; overflow-y: auto; padding: 1.75rem; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+            <h3 style="font-size: 1.15rem; font-weight: 700; color: #0F172A; margin: 0;">✏️ Edit Student Details</h3>
+            <button type="button" class="modal-close" onclick="closeModal('editStudentModal')">&times;</button>
+        </div>
+
+        <form id="editStudentForm" method="POST" action="">
+            <div style="margin-bottom: 1rem;">
+                <span style="font-size: 0.82rem; color: #64748B;">Admission Number:</span>
+                <span id="edit_adm_no_display" style="font-weight: 700; color: #2563EB; margin-left: 0.3rem;"></span>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="edit_name">Full Name <span style="color: #EF4444;">*</span></label>
+                <input type="text" id="edit_name" name="name" class="form-control" required>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label class="form-label" for="edit_class_name">Class / Grade <span style="color: #EF4444;">*</span></label>
+                    <input type="text" id="edit_class_name" name="class_name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="edit_seating_group">Seating Group</label>
+                    <input type="text" id="edit_seating_group" name="seating_group" class="form-control">
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label class="form-label" for="edit_roll_in_class">Roll in Class</label>
+                    <input type="number" id="edit_roll_in_class" name="roll_in_class" class="form-control" min="1">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="edit_roll_in_group">Roll in Group</label>
+                    <input type="number" id="edit_roll_in_group" name="roll_in_group" class="form-control" min="1">
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label class="form-label" for="edit_gender">Gender</label>
+                    <select id="edit_gender" name="gender" class="form-control">
+                        <option value="M">Male (Boy)</option>
+                        <option value="F">Female (Girl)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="edit_block">Campus Block</label>
+                    <select id="edit_block" name="block" class="form-control">
+                        <option value="Boys Block">Boys Block</option>
+                        <option value="Girls Block">Girls Block</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 1.5rem; margin: 0.75rem 0 1.25rem;">
+                <label style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; cursor: pointer;">
+                    <input type="checkbox" id="edit_is_hifz" name="is_hifz" value="1"> Hifz Student
+                </label>
+                <label style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; cursor: pointer;">
+                    <input type="checkbox" id="edit_is_hindi" name="is_hindi" value="1"> Hindi Subject
+                </label>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 0.6rem;">
+                <button type="button" class="btn btn-outline" onclick="closeModal('editStudentModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Update Student</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Import from Excel -->
+<div id="uploadModal" class="modal-backdrop" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1050; align-items: center; justify-content: center;">
+    <div style="background: #FFFFFF; border-radius: 12px; max-width: 520px; width: 90%; padding: 1.75rem; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+            <h3 style="font-size: 1.15rem; font-weight: 700; color: #0F172A; margin: 0;">📥 Import Students from Excel</h3>
+            <button type="button" class="modal-close" onclick="closeModal('uploadModal')">&times;</button>
+        </div>
+
+        <form method="POST" action="{{ url_for('upload_students') }}" enctype="multipart/form-data">
+            <p style="font-size: 0.84rem; color: #64748B; margin-bottom: 1rem;">
+                Supports both school formats:
+                <br>&bull; Multi-tab consolidated marksheet (<strong>consoliataed sheet PA 2.xlsx</strong>)
+                <br>&bull; Single-sheet roster (<strong>PA2_Seating_Simple.xlsx</strong>)
+            </p>
+
+            <div class="form-group">
+                <label class="form-label" for="excel_file">Select Excel File (.xlsx) <span style="color: #EF4444;">*</span></label>
+                <input type="file" id="excel_file" name="excel_file" class="form-control" accept=".xlsx" required>
+            </div>
+
+            <div class="form-group" style="margin-top: 1rem;">
+                <label class="form-label">Import Mode</label>
+                <div style="display: flex; gap: 1.5rem;">
+                    <label style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; cursor: pointer;">
+                        <input type="radio" name="mode" value="replace" checked> Replace Current Students
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; cursor: pointer;">
+                        <input type="radio" name="mode" value="append"> Append / Update
+                    </label>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 0.6rem; margin-top: 1.5rem;">
+                <button type="button" class="btn btn-outline" onclick="closeModal('uploadModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Start Import</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function openModal(id) {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'flex';
+    }
+    function closeModal(id) {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+    }
+
+    // Selection and Bulk Delete Management
+    function toggleSelectAll(checked) {
+        const checkboxes = document.querySelectorAll('#studentsTable tbody tr.student-row input.student-select');
+        checkboxes.forEach(cb => {
+            const row = cb.closest('tr');
+            if (row && row.style.display !== 'none') {
+                cb.checked = checked;
+            }
+        });
+        const masterCb = document.getElementById('masterCheckbox');
+        const headerCb = document.getElementById('tableHeaderCheckbox');
+        if (masterCb) masterCb.checked = checked;
+        if (headerCb) headerCb.checked = checked;
+        updateSelectedCount();
+    }
+
+    function updateSelectedCount() {
+        const selected = document.querySelectorAll('#studentsTable tbody input.student-select:checked');
+        const count = selected.length;
+        const countEl = document.getElementById('selectedCount');
+        const btn = document.getElementById('bulkDeleteBtn');
+        if (countEl) countEl.textContent = count;
+        if (btn) {
+            btn.disabled = (count === 0);
+            if (count > 0) {
+                btn.style.opacity = '1';
+                btn.style.cursor = 'pointer';
+            } else {
+                btn.style.opacity = '0.5';
+                btn.style.cursor = 'not-allowed';
+            }
+        }
+    }
+
+    function confirmBulkDelete() {
+        const selected = document.querySelectorAll('#studentsTable tbody input.student-select:checked');
+        const ids = Array.from(selected).map(cb => cb.value);
+        if (ids.length === 0) {
+            alert('Please select at least one student to delete.');
+            return;
+        }
+
+        const msg = `⚠️ ARE YOU SURE?\n\nYou are about to permanently delete ${ids.length} selected student(s) from the database.\n\nThis cannot be undone. Click OK to confirm.`;
+        if (confirm(msg)) {
+            document.getElementById('bulkDeleteIdsInput').value = ids.join(',');
+            document.getElementById('bulkDeleteForm').submit();
+        }
+    }
+
+    function openEditModal(student) {
+        document.getElementById('editStudentForm').action = '/students/edit/' + student.id;
+        document.getElementById('edit_adm_no_display').textContent = student.adm_no;
+        document.getElementById('edit_name').value = student.name;
+        document.getElementById('edit_class_name').value = student.class_name;
+        document.getElementById('edit_seating_group').value = student.seating_group || '';
+        document.getElementById('edit_roll_in_class').value = student.roll_in_class;
+        document.getElementById('edit_roll_in_group').value = student.roll_in_group;
+        document.getElementById('edit_gender').value = student.gender;
+        document.getElementById('edit_block').value = student.block;
+        document.getElementById('edit_is_hifz').checked = (student.is_hifz == 1);
+        document.getElementById('edit_is_hindi').checked = (student.is_hindi == 1);
+        openModal('editStudentModal');
+    }
+
+    // Live search instant filter on table rows
+    const searchInput = document.getElementById('studentSearchInput');
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            const query = this.value.toLowerCase().trim();
+            const rows = document.querySelectorAll('#studentsTable tbody tr.student-row');
+            rows.forEach(row => {
+                const text = row.innerText.toLowerCase();
+                if (!query || text.includes(query)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+    }
+
+    window.addEventListener('click', function(e) {
+        if (e.target.classList.contains('modal-backdrop')) {
+            e.target.style.display = 'none';
+        }
+    });
+</script>
+{% endblock %}

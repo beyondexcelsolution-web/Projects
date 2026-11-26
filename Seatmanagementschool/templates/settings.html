@@ -1,0 +1,268 @@
+{% extends 'base.html' %}
+{% set active_page = 'settings' %}
+
+{% block title %}Exam Settings - Crescent Islamic High School{% endblock %}
+
+{% block content %}
+<div style="max-width: 960px; margin: 0 auto;">
+    <!-- Header -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <h2 style="font-size: 1.45rem; font-weight: 800; color: #0F172A; margin: 0;">Examination Settings &amp; Assessment Configuration</h2>
+            <p style="font-size: 0.86rem; color: #64748B; margin-top: 0.25rem;">Configure the active assessment title, academic year, first exam date, and attendance day columns.</p>
+        </div>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-outline">&larr; Back to Dashboard</a>
+    </div>
+
+    <form method="POST" action="{{ url_for('settings') }}">
+        <!-- Card 1: Basic Exam Information -->
+        <div style="background: #FFFFFF; border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 1.75rem; margin-bottom: 1.75rem; box-shadow: var(--shadow-sm);">
+            <h3 style="font-size: 1.1rem; font-weight: 700; color: #0F172A; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
+                <span>📋</span> Basic Examination Details
+            </h3>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.25rem;">
+                <div class="form-group">
+                    <label class="form-label" for="exam_title">Assessment Name / Title <span style="color: #EF4444;">*</span></label>
+                    <input type="text" id="exam_title" name="exam_title" class="form-control" value="{{ settings.get('exam_title', 'Periodic Assessment – 2') }}" required placeholder="e.g. Periodic Assessment – 2">
+                    <small style="color: #64748B; font-size: 0.76rem;">Appears in all Word documents, banners, and attendance sheets.</small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="academic_year">Academic Session / Year <span style="color: #EF4444;">*</span></label>
+                    <input type="text" id="academic_year" name="academic_year" class="form-control" value="{{ settings.get('academic_year', '2026-27') }}" required placeholder="e.g. 2026-27">
+                    <small style="color: #64748B; font-size: 0.76rem;">Displayed on official headers and reports.</small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="first_exam_date">First Exam Date (Calendar) <span style="color: #EF4444;">*</span></label>
+                    <input type="date" id="first_exam_date" name="first_exam_date" class="form-control" value="{{ first_exam_date_iso }}" required>
+                    <small style="color: #2563EB; font-size: 0.76rem; font-weight: 600;">✨ Selecting a date automatically populates 8 exam dates &amp; days below, skipping Sundays!</small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="class_print_order">Class Print Sort Order</label>
+                    <select id="class_print_order" name="class_print_order" class="form-control">
+                        <option value="Section first" {% if settings.get('class_print_order') == 'Section first' %}selected{% endif %}>Section first (6A, 7A, 8A, 9A, 10A, 6B, ...)</option>
+                        <option value="Standard" {% if settings.get('class_print_order') == 'Standard' %}selected{% endif %}>Standard Numeric (6A, 6B, 6C, 7A, 7B, ...)</option>
+                    </select>
+                    <small style="color: #64748B; font-size: 0.76rem;">Controls class grouping in reports and summaries.</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 2: Dynamic Exam Attendance Date & Day Columns -->
+        <div style="background: #FFFFFF; border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 1.75rem; margin-bottom: 1.75rem; box-shadow: var(--shadow-sm);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+                <div>
+                    <h3 style="font-size: 1.1rem; font-weight: 700; color: #0F172A; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                        <span>📅</span> Exam Attendance Columns (Add / Remove Days)
+                    </h3>
+                    <p style="font-size: 0.82rem; color: #64748B; margin-top: 0.2rem;">Dates use calendar pickers. You can add more days or remove days based on your exam schedule. Sundays are auto-skipped.</p>
+                </div>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="autoCalculateDates(document.getElementById('first_exam_date').value)">⚡ Auto-Calculate Dates</button>
+                    <button type="button" class="btn btn-sm btn-primary" onclick="addExamDayRow()" style="font-weight: 700; background: #16A34A; border-color: #16A34A; color: #FFF;">➕ Add Exam Day</button>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table" id="attendanceDatesTable" style="font-size: 0.85rem;">
+                    <thead>
+                        <tr>
+                            <th style="width: 70px; text-align: center;">Col #</th>
+                            <th style="width: 45%;">Exam Date (Calendar Picker)</th>
+                            <th style="width: 40%;">Day of Week (Auto-updated)</th>
+                            <th style="width: 70px; text-align: center;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="attendanceDatesBody">
+                        {% for item in attendance_dates %}
+                        <tr class="day-row">
+                            <td class="col-num" style="text-align: center; font-weight: 700; color: #64748B; vertical-align: middle;">
+                                {{ item.col }}
+                            </td>
+                            <td>
+                                <input type="date" name="dates[]" class="form-control day-date-input" value="{{ item.date_iso }}" onchange="updateDayRow(this)">
+                            </td>
+                            <td>
+                                <input type="text" name="days[]" class="form-control day-text-input" value="{{ item.day }}" placeholder="e.g. Monday">
+                            </td>
+                            <td style="text-align: center; vertical-align: middle;">
+                                <button type="button" class="btn btn-sm btn-danger" onclick="removeExamDayRow(this)" title="Remove Day" style="padding: 0.25rem 0.6rem; font-size: 0.8rem;">🗑️</button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-bottom: 2rem;">
+            <a href="{{ url_for('dashboard') }}" class="btn btn-outline">Cancel</a>
+            <button type="submit" class="btn btn-primary" style="padding: 0.65rem 2rem; font-weight: 700;">💾 Save Exam Settings</button>
+        </div>
+    </form>
+
+    <!-- Card 3: Clean & Reset Database (For Client Testing) -->
+    <div style="background: #FFF; border: 1px solid #FECACA; border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 3rem; box-shadow: var(--shadow-sm);">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <h4 style="color: #DC2626; font-size: 1.05rem; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                    <span>🧹</span> Clean Database for Testing (Reset Students &amp; Arrangements)
+                </h4>
+                <p style="color: #64748B; font-size: 0.82rem; margin: 0.25rem 0 0 0;">
+                    Clears all students and arrangements so you or your client can perform a clean fresh test from Excel import to seating plan. Room definitions are preserved.
+                </p>
+            </div>
+            <form method="POST" action="{{ url_for('reset_data') }}" onsubmit="return confirm('⚠️ ARE YOU SURE?\n\nThis will permanently delete all Students and Seating Arrangements from the database so you can start a fresh test.\n\nClick OK to confirm clean reset.');">
+                <button type="submit" class="btn btn-danger" style="font-weight: 700; padding: 0.55rem 1.25rem;">
+                    🗑️ Clean All Data Now
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+    function updateDayRow(dateInput) {
+        if (!dateInput || !dateInput.value) return;
+        const row = dateInput.closest('tr');
+        if (!row) return;
+        const dayInput = row.querySelector('.day-text-input');
+        if (!dayInput) return;
+
+        const parts = dateInput.value.split('-');
+        if (parts.length === 3) {
+            const y = parseInt(parts[0], 10);
+            const m = parseInt(parts[1], 10) - 1;
+            const d = parseInt(parts[2], 10);
+            const dt = new Date(y, m, d);
+            if (!isNaN(dt.getTime())) {
+                dayInput.value = DAY_NAMES[dt.getDay()];
+            }
+        }
+    }
+
+    function reindexDays() {
+        const rows = document.querySelectorAll('#attendanceDatesBody tr.day-row');
+        rows.forEach((row, idx) => {
+            const colCell = row.querySelector('.col-num');
+            if (colCell) colCell.textContent = idx + 1;
+        });
+    }
+
+    function addExamDayRow() {
+        const tbody = document.getElementById('attendanceDatesBody');
+        const rows = tbody.querySelectorAll('tr.day-row');
+        const newColNum = rows.length + 1;
+
+        // Auto-calculate next date based on last row if possible
+        let nextDateStr = '';
+        let nextDayName = '';
+        if (rows.length > 0) {
+            const lastDateInput = rows[rows.length - 1].querySelector('.day-date-input');
+            if (lastDateInput && lastDateInput.value) {
+                const parts = lastDateInput.value.split('-');
+                if (parts.length === 3) {
+                    let dt = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+                    dt.setDate(dt.getDate() + 1);
+                    // Skip Sunday
+                    if (dt.getDay() === 0) dt.setDate(dt.getDate() + 1);
+                    const yyyy = dt.getFullYear();
+                    const mm = String(dt.getMonth() + 1).padStart(2, '0');
+                    const dd = String(dt.getDate()).padStart(2, '0');
+                    nextDateStr = `${yyyy}-${mm}-${dd}`;
+                    nextDayName = DAY_NAMES[dt.getDay()];
+                }
+            }
+        }
+
+        const tr = document.createElement('tr');
+        tr.className = 'day-row';
+        tr.innerHTML = `
+            <td class="col-num" style="text-align: center; font-weight: 700; color: #64748B; vertical-align: middle;">
+                ${newColNum}
+            </td>
+            <td>
+                <input type="date" name="dates[]" class="form-control day-date-input" value="${nextDateStr}" onchange="updateDayRow(this)">
+            </td>
+            <td>
+                <input type="text" name="days[]" class="form-control day-text-input" value="${nextDayName}" placeholder="e.g. Monday">
+            </td>
+            <td style="text-align: center; vertical-align: middle;">
+                <button type="button" class="btn btn-sm btn-danger" onclick="removeExamDayRow(this)" title="Remove Day" style="padding: 0.25rem 0.6rem; font-size: 0.8rem;">🗑️</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    }
+
+    function removeExamDayRow(btn) {
+        const tbody = document.getElementById('attendanceDatesBody');
+        const rows = tbody.querySelectorAll('tr.day-row');
+        if (rows.length <= 1) {
+            alert('At least one examination day is required.');
+            return;
+        }
+        const row = btn.closest('tr');
+        if (row) {
+            row.remove();
+            reindexDays();
+        }
+    }
+
+    // Auto-calculate consecutive exam dates skipping Sundays starting from First Exam Date
+    function autoCalculateDates(startDateStr) {
+        if (!startDateStr) {
+            alert('Please select the First Exam Date first.');
+            return;
+        }
+
+        const parts = startDateStr.split('-');
+        if (parts.length !== 3) return;
+
+        let current = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+        if (isNaN(current.getTime())) return;
+
+        // If start date itself is Sunday, move to Monday
+        if (current.getDay() === 0) {
+            current.setDate(current.getDate() + 1);
+        }
+
+        const rows = document.querySelectorAll('#attendanceDatesBody tr.day-row');
+        rows.forEach((row, idx) => {
+            if (idx > 0) {
+                current.setDate(current.getDate() + 1);
+                // Skip Sunday
+                if (current.getDay() === 0) {
+                    current.setDate(current.getDate() + 1);
+                }
+            }
+
+            const yyyy = current.getFullYear();
+            const mm = String(current.getMonth() + 1).padStart(2, '0');
+            const dd = String(current.getDate()).padStart(2, '0');
+            const isoStr = `${yyyy}-${mm}-${dd}`;
+
+            const dateInput = row.querySelector('.day-date-input');
+            const dayInput = row.querySelector('.day-text-input');
+            if (dateInput) dateInput.value = isoStr;
+            if (dayInput) dayInput.value = DAY_NAMES[current.getDay()];
+        });
+    }
+
+    // Attach live change listener to First Exam Date
+    document.addEventListener('DOMContentLoaded', function() {
+        const firstDateEl = document.getElementById('first_exam_date');
+        if (firstDateEl) {
+            firstDateEl.addEventListener('change', function() {
+                autoCalculateDates(this.value);
+            });
+        }
+    });
+</script>
+{% endblock %}

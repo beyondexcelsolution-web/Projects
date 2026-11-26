@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% set active_page = 'display' %}
+
+{% block title %}Notice Board Display Lists - Crescent Islamic School{% endblock %}
+
+{% block content %}
+<div class="card no-print">
+    <div class="card-header">
+        <div>
+            <h2 class="card-title">📄 Room-wise Notice Board Lists</h2>
+            <span class="card-subtitle">Print-ready student lists to display outside exam classrooms</span>
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+            <button onclick="window.print()" class="btn btn-primary btn-sm">🖨️ Print All Sheets</button>
+            <a href="{{ url_for('export_docx', doc_type='display') }}" class="btn btn-outline btn-sm">📥 Download Word (.docx)</a>
+        </div>
+    </div>
+</div>
+
+{% for rname, rdata in rooms_data.items() %}
+<div class="print-sheet page-break">
+    <div class="print-header">
+        <h2>{{ exam.name }} ({{ exam.academic_year }})</h2>
+        <h3>Room wise List</h3>
+        <p style="font-size: 1.15rem; font-weight: 800; color: #1E40AF; margin-top: 0.4rem;">
+            ROOM NAME : {{ rname }} (TOTAL {{ rdata.total }})
+        </p>
+    </div>
+
+    {% for cname, students in rdata.classes.items() %}
+    <div style="margin-bottom: 1.5rem;">
+        <div style="background: #E2E8F0; padding: 0.4rem 0.75rem; font-weight: 700; font-size: 0.95rem; border: 1px solid #94A3B8; text-align: center;">
+            Class {{ cname }} ({{ students|length }} Students)
+        </div>
+        <table class="print-table" style="margin-top: -1px;">
+            <thead>
+                <tr>
+                    <th style="width: 15%;">S.No</th>
+                    <th style="width: 30%;">Admi.No</th>
+                    <th style="width: 55%; text-align: left;">Name</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in students %}
+                <tr>
+                    <td style="text-align: center;">{{ s.roll_no or loop.index }}</td>
+                    <td style="text-align: center; font-weight: 600;">{{ s.adm_no }}</td>
+                    <td style="text-align: left; font-weight: 500;">{{ s.student_name }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endfor %}
+</div>
+{% endfor %}
+{% endblock %}

@@ -1,0 +1,17 @@
+# Global Git Ignore for Projects
+__pycache__/
+*.py[cod]
+*.class
+build/
+dist/
+installer_output/
+*.log
+.env
+.idea/
+.vscode/
+instance/*.db
+instance/*.sqlite
+uploads/*
+!uploads/.gitkeep
+exports/*
+!exports/.gitkeep

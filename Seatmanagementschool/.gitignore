@@ -1,0 +1,30 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# PyInstaller / Build outputs
+build/
+dist/
+installer_output/
+*.manifest
+*.spec.bak
+
+# Local Database & User State
+instance/*.db
+instance/*.sqlite
+uploads/*
+!uploads/.gitkeep
+exports/*
+!exports/.gitkeep
+
+# IDEs & Editor configs
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Environment & Credentials
+.env
+github_token.txt
+*.log

@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% set active_page = 'plan' %}
+
+{% block title %}Class Seating Arrangements - Crescent Islamic School{% endblock %}
+
+{% block content %}
+<div class="card no-print">
+    <div class="card-header">
+        <div>
+            <h2 class="card-title">📑 Class-wise Student Seating Slips</h2>
+            <span class="card-subtitle">List distributed to Class Teachers showing allotted exam room for each student</span>
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+            <button onclick="window.print()" class="btn btn-primary btn-sm">🖨️ Print All Classes</button>
+            <a href="{{ url_for('export_docx', doc_type='plan') }}" class="btn btn-outline btn-sm">📥 Download Word (.docx)</a>
+        </div>
+    </div>
+</div>
+
+{% for cname, students in classes_dict.items() %}
+<div class="print-sheet page-break">
+    <div class="print-header">
+        <h2>{{ exam.name }} ({{ exam.academic_year }})</h2>
+        <h3>Seating Arrangements</h3>
+        <div style="display: flex; justify-content: space-between; font-weight: 700; font-size: 1rem; margin-top: 0.5rem;">
+            <span>CLASS: {{ cname }}</span>
+            <span>Name List</span>
+            <span>Class Tr. _______________</span>
+        </div>
+    </div>
+
+    <table class="print-table">
+        <thead>
+            <tr style="background: #E2E8F0;">
+                <th style="width: 10%;">S.NO</th>
+                <th style="width: 25%;">Registration No.</th>
+                <th style="width: 45%; text-align: left;">NAME OF THE STUDENT</th>
+                <th style="width: 20%;">ROOM ALLOTTED</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in students %}
+            <tr>
+                <td style="text-align: center;">{{ s.roll_no or loop.index }}</td>
+                <td style="text-align: center; font-weight: 600;">{{ s.adm_no }}</td>
+                <td style="text-align: left;">{{ s.student_name }}</td>
+                <td style="text-align: center; font-weight: 700; color: #1E40AF; background: #F8FAFC;">
+                    {{ s.room_name }}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="print-footer" style="margin-top: 2rem;">
+        <div>EXAMINATION I/c</div>
+        <div>PRINCIPAL</div>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}

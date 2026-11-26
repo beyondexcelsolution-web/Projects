@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+{% set active_page = 'generator' %}
+
+{% block title %}One-Click Seating Generator - School Seat Management{% endblock %}
+
+{% block content %}
+<div class="card" style="border-left: 5px solid var(--primary);">
+    <div class="card-header">
+        <div>
+            <h2 class="card-title" style="font-size: 1.35rem;">⚡ Automated 1-Click Seating Engine</h2>
+            <span class="card-subtitle">Zero Manual Work &bull; Mathematical Anti-Cheating Class Interleaving &bull; Gender Block Isolation</span>
+        </div>
+        <div style="display: flex; gap: 0.6rem;">
+            <form action="{{ url_for('generate_seating') }}" method="POST">
+                <button type="submit" class="btn btn-primary btn-lg" onclick="return confirm('Run automated 1-click seating allocation now? All students will be arranged perfectly across rooms.');">
+                    ⚡ Generate Arrangement Now
+                </button>
+            </form>
+            <form action="{{ url_for('clear_seating') }}" method="POST">
+                <button type="submit" class="btn btn-danger btn-lg" onclick="return confirm('Are you sure you want to clear current seating allocations?');">
+                    🗑️ Clear Allocation
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Engine Rules & Guarantee Badges -->
+    <div style="background: var(--bg-subtle); border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1.5rem;">
+        <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.75rem;">
+            🛡️ Automated Algorithm Guarantees:
+        </h4>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem;">
+            <div style="background: #FFFFFF; border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 0.85rem;">
+                <strong style="color: var(--accent-emerald); font-size: 0.9rem;">✓ Anti-Cheating Guarantee</strong>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem;">
+                    No two students of the same class sit on the same bench. Classes alternate on Left and Right seats.
+                </p>
+            </div>
+            <div style="background: #FFFFFF; border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 0.85rem;">
+                <strong style="color: var(--primary); font-size: 0.9rem;">✓ Block & Wing Isolation</strong>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem;">
+                    Girls Block students are allotted exclusively to Girls Rooms; Boys students exclusively to Boys Rooms.
+                </p>
+            </div>
+            <div style="background: #FFFFFF; border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 0.85rem;">
+                <strong style="color: var(--accent-indigo); font-size: 0.9rem;">✓ Sequential Roll Order</strong>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem;">
+                    Students are seated strictly in increasing order of Roll No / Admission No within each section.
+                </p>
+            </div>
+            <div style="background: #FFFFFF; border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 0.85rem;">
+                <strong style="color: var(--accent-amber); font-size: 0.9rem;">✓ Room Capacity Optimization</strong>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem;">
+                    Fills rooms up to exact bench counts (2 students per bench), carrying remaining students neatly into next room.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Allocation Statistics -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon green">✓</div>
+            <div class="stat-info">
+                <h3>{{ summary.total_allocated }} / {{ total_students }}</h3>
+                <p>Total Seated</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon purple">🌸</div>
+            <div class="stat-info">
+                <h3>{{ summary.girls_total }}</h3>
+                <p>Girls Seated</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon blue">🔷</div>
+            <div class="stat-info">
+                <h3>{{ summary.boys_total }}</h3>
+                <p>Boys Seated</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon amber">🏫</div>
+            <div class="stat-info">
+                <h3>{{ summary.rooms_used }}</h3>
+                <p>Rooms Utilized</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon rose">🛡️</div>
+            <div class="stat-info">
+                <h3>0</h3>
+                <p>Conflicts Detected</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Detailed Room Allocation Table -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">🏫 Room Utilization & Student Allocations</h3>
+        <div style="display: flex; gap: 0.5rem;">
+            <a href="{{ url_for('export_excel') }}" class="btn btn-outline btn-sm">📥 Excel (.xlsx)</a>
+            <a href="{{ url_for('export_docx', doc_type='summary') }}" class="btn btn-outline btn-sm">📥 Word (.docx)</a>
+            <a href="{{ url_for('print_summary') }}" target="_blank" class="btn btn-primary btn-sm">🖨️ Print Summary</a>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Room</th>
+                    <th>Block</th>
+                    <th>Floor</th>
+                    <th>Capacity</th>
+                    <th>Seated</th>
+                    <th>Occupancy</th>
+                    <th>Classes & Roll Ranges</th>
+                    <th>Invigilators</th>
+                    <th>Desk Plan</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for rm in summary.rooms %}
+                {% set cap = rm.benches * 2 %}
+                {% set pct = (rm.students_count * 100 / cap)|round(0)|int if cap > 0 else 0 %}
+                <tr>
+                    <td>
+                        <strong style="color: var(--primary);">{{ rm.name }}</strong>
+                    </td>
+                    <td>
+                        <span class="badge {% if rm.block == 'Girls Block' %}badge-purple{% else %}badge-blue{% endif %}">
+                            {{ rm.block }}
+                        </span>
+                    </td>
+                    <td>{{ rm.floor }}</td>
+                    <td>{{ cap }} seats ({{ rm.benches }} benches)</td>
+                    <td>
+                        <strong>{{ rm.students_count }}</strong>
+                    </td>
+                    <td style="min-width: 130px;">
+                        <div style="background: #E2E8F0; border-radius: 9999px; height: 8px; width: 100%; overflow: hidden; margin-bottom: 0.25rem;">
+                            <div style="background: {% if pct >= 90 %}#10B981{% elif pct >= 50 %}#3B82F6{% else %}#F59E0B{% endif %}; height: 100%; width: {{ pct }}%;"></div>
+                        </div>
+                        <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">{{ pct }}% Filled</span>
+                    </td>
+                    <td style="font-size: 0.82rem;">
+                        {{ rm.roll_ranges_str }}
+                    </td>
+                    <td>
+                        <span class="badge badge-gray">{{ rm.invigilators }} Teacher(s)</span>
+                    </td>
+                    <td>
+                        <a href="{{ url_for('room_view', room_id=rm.room_id) }}" class="btn btn-outline btn-sm">
+                            🪑 Visual Layout
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

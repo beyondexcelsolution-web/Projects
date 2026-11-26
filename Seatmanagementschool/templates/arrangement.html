@@ -1,0 +1,327 @@
+{% extends 'base.html' %}
+{% set active_page = 'arrangement' %}
+
+{% block title %}Room Seating Arrangement Grid - Crescent Islamic High School{% endblock %}
+
+{% block content %}
+<div class="arrangement-wrapper">
+    <!-- Top Action & Integrity Bar -->
+    <div style="background: #FFFFFF; border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: var(--shadow-sm);">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
+            <div>
+                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+                    <span class="badge badge-blue">CORE SEATING ENGINE</span>
+                    <span style="font-size: 0.8rem; color: #64748B;">Replicating Excel Arrangement Workflow</span>
+                </div>
+                <h2 style="font-size: 1.45rem; font-weight: 800; color: #0F172A; margin: 0;">Room Seating Arrangement Grid</h2>
+                <p style="font-size: 0.84rem; color: #64748B; margin-top: 0.2rem;">
+                    Total Room Lines: <strong>{{ arrangements | length }}</strong> &bull; Total Allocated: <strong>{{ arrangements | sum(attribute='count') }} Students</strong>
+                </p>
+            </div>
+            <div style="display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center;">
+                <form action="{{ url_for('load_standard_plan') }}" method="POST" style="display: inline;" onsubmit="return confirm('Load the complete standard PA-2 seating plan? This will fill all 16 rooms up to full capacity (480 students).');">
+                    <button type="submit" class="btn" style="background: #0284C7; color: #FFFFFF; font-weight: 600; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer;">⚡ Load Full Capacity Plan (All 16 Rooms)</button>
+                </form>
+                <button type="button" class="btn btn-primary" onclick="openModal('addArrModal')">➕ Add Arrangement Line</button>
+            </div>
+        </div>
+
+        <!-- Integrity Notice -->
+        {% if checks.disagreement_count > 0 %}
+        <div style="background: #FEF2F2; border: 1px solid #FECACA; border-radius: var(--radius-sm); padding: 0.85rem 1.15rem; font-size: 0.88rem; color: #991B1B; margin-bottom: 1rem;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.4rem;">
+                <strong>⚠️ Roll Range Discrepancy ({{ checks.disagreement_count }} line mismatch):</strong>
+                <span class="badge badge-rose">{{ checks.disagreement_count }} Mismatch</span>
+            </div>
+            <div style="font-size: 0.84rem; color: #7F1D1D; line-height: 1.45;">
+                The student count in the specified roll range does not match the actual student list:
+            </div>
+            <ul style="margin: 0.4rem 0 0.4rem 1.25rem; font-size: 0.84rem; color: #991B1B;">
+                {% for d in checks.disagreements_list %}
+                <li>
+                    <strong>Room {{ d.arrangement.room_name }} &bull; Class {{ d.arrangement.class_or_group }}</strong>: 
+                    Allocated Roll <strong>{{ d.arrangement.from_roll }} to {{ d.arrangement.to_roll }}</strong> ({{ d.expected }} seats), but only <strong>{{ d.found }} student(s)</strong> found in this class. (Please click ✏️ Edit and set 'To Roll' to <strong>{{ d.found }}</strong>).
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% elif checks.all_checks_pass %}
+        <div style="background: #ECFDF5; border: 1px solid #A7F3D0; border-radius: var(--radius-sm); padding: 0.75rem 1rem; display: flex; align-items: center; justify-content: space-between; font-size: 0.85rem; color: #065F46; margin-bottom: 1rem;">
+            <div>
+                <strong>✓ Plan Integrity Verified:</strong> All {{ checks.total_students_loaded }} active students mapped exactly to exam rooms with 0 unseated and 0 discrepancies.
+            </div>
+            <span class="badge badge-green">{{ arrangements | length }} Lines Verified</span>
+        </div>
+        {% else %}
+        <div style="background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: var(--radius-sm); padding: 0.75rem 1rem; font-size: 0.85rem; color: #1E40AF; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <strong>ℹ️ Seating Plan In-Progress:</strong> {{ arrangements | length }} line(s) added ({{ checks.total_students_loaded - checks.unseated_count }} of {{ checks.total_students_loaded }} students seated). No roll mismatch in active lines.
+            </div>
+            <span class="badge badge-blue">{{ checks.unseated_count }} Students Remaining</span>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Explainer Callout -->
+    <div style="background: #F8FAFC; border: 1px solid #CBD5E1; border-radius: var(--radius-md); padding: 1rem 1.25rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 1rem;">
+        <div style="font-size: 1.75rem;">💡</div>
+        <div style="font-size: 0.85rem; color: #334155;">
+            <strong>How Room Seating Allocation Works:</strong> Simply select the <strong>Exam Room</strong> and allocate the <strong>Class / Seating Group</strong> along with their <strong>Roll Number Range</strong> (e.g. Roll 1 to 15). The system automatically places two candidates per bench and generates all official display notices and attendance sheets.
+        </div>
+    </div>
+
+    <!-- Arrangements Grid Table -->
+    <div style="background: #FFFFFF; border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 2rem; box-shadow: var(--shadow-sm);">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th style="width: 60px;">Line #</th>
+                        <th>Room Name</th>
+                        <th>Class / Seating Group</th>
+                        <th style="text-align: center;">From Roll</th>
+                        <th style="text-align: center;">To Roll</th>
+                        <th style="text-align: center;">Total Count</th>
+                        <th style="text-align: center;">Verification</th>
+                        <th style="text-align: right; width: 140px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for a in arrangements %}
+                    <tr>
+                        <td style="font-weight: 700; color: #64748B;">{{ loop.index }}</td>
+                        <td>
+                            <strong style="color: #0F172A; font-size: 0.95rem;">Room {{ a.room_name }}</strong>
+                        </td>
+                        <td>
+                            <span class="badge badge-blue" style="font-size: 0.85rem;">{{ a.class_or_group }}</span>
+                        </td>
+                        <td style="text-align: center; font-weight: 600;">{{ a.from_roll }}</td>
+                        <td style="text-align: center; font-weight: 600;">{{ a.to_roll }}</td>
+                        <td style="text-align: center;">
+                            {% if a.status == 'MATCH' %}
+                                <strong style="color: #1E40AF;">{{ a.count }}</strong>
+                            {% else %}
+                                <strong style="color: #DC2626;">{{ a.found_count }}</strong>
+                                <span style="font-size: 0.75rem; color: #64748B;">/ {{ a.expected_count }}</span>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: center;">
+                            {% if a.status == 'MATCH' %}
+                                <span class="badge badge-green">✓ Valid ({{ a.found_count }})</span>
+                            {% else %}
+                                <span class="badge badge-rose" title="{{ a.status_detail }}">⚠️ Mismatch (Found {{ a.found_count }} of {{ a.expected_count }})</span>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: right;">
+                            <button type="button" class="btn btn-sm btn-outline" onclick="openEditArrModal({{ a | tojson | forceescape }})">✏️ Edit</button>
+                            <form action="{{ url_for('delete_arrangement', arr_id=a.id) }}" method="POST" style="display: inline;" onsubmit="return confirm('Remove line for Room {{ a.room_name }} - {{ a.class_or_group }}?');">
+                                <button type="submit" class="btn btn-sm btn-outline" style="color: #EF4444; border-color: #FECACA;">🗑️</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="8" style="text-align: center; padding: 2rem; color: #64748B;">
+                            No arrangement blocks created yet. Click "Add Arrangement Line" to start.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Add Arrangement Line -->
+<div id="addArrModal" class="modal-backdrop" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1050; align-items: center; justify-content: center;">
+    <div style="background: #FFFFFF; border-radius: 12px; max-width: 520px; width: 90%; padding: 1.75rem; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+            <h3 style="font-size: 1.15rem; font-weight: 700; color: #0F172A; margin: 0;">➕ Add Arrangement Line</h3>
+            <button type="button" class="modal-close" onclick="closeModal('addArrModal')">&times;</button>
+        </div>
+
+        <form method="POST" action="{{ url_for('add_arrangement') }}">
+            <div class="form-group" style="margin-bottom: 1rem;">
+                <label class="form-label" for="add_room_name">Exam Room <span style="color: #EF4444;">*</span></label>
+                <select id="add_room_name" name="room_name" class="form-control" required onchange="onRoomChange('add')">
+                    <option value="">Select Room...</option>
+                    {% for r in rooms %}
+                    <option value="{{ r.name }}">Room {{ r.name }} ({{ r.block }} &bull; {{ r.benches }} benches / {{ r.benches * 2 }} seats)</option>
+                    {% endfor %}
+                </select>
+                <div id="add_room_hint" style="font-size: 0.8rem; margin-top: 0.35rem; color: #475569; font-weight: 600;"></div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 1rem;">
+                <label class="form-label" for="add_class_or_group">Class or Seating Group <span style="color: #EF4444;">*</span></label>
+                <input list="classes_list" id="add_class_or_group" name="class_or_group" class="form-control" required placeholder="e.g. 6 A, 7 A, 11 G, 12 B" oninput="onClassChange('add')" onchange="onClassChange('add')">
+                <datalist id="classes_list">
+                    {% for c in classes %}
+                    <option value="{{ c }}">
+                    {% endfor %}
+                    {% for g in groups %}
+                    <option value="{{ g }}">
+                    {% endfor %}
+                </datalist>
+                <div id="add_class_hint" style="font-size: 0.8rem; margin-top: 0.35rem; color: #2563EB; font-weight: 600;"></div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label class="form-label" for="add_from_roll">From Roll <span style="color: #EF4444;">*</span></label>
+                    <input type="number" id="add_from_roll" name="from_roll" class="form-control" value="1" min="1" required oninput="checkRollRange('add')">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="add_to_roll">To Roll <span style="color: #EF4444;">*</span></label>
+                    <input type="number" id="add_to_roll" name="to_roll" class="form-control" value="" min="1" required oninput="checkRollRange('add')">
+                </div>
+            </div>
+            <div id="add_roll_warning" style="font-size: 0.78rem; color: #DC2626; margin-top: -0.5rem; margin-bottom: 0.75rem; display: none;"></div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 0.6rem; margin-top: 1.25rem;">
+                <button type="button" class="btn btn-outline" onclick="closeModal('addArrModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Line</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Edit Arrangement Line -->
+<div id="editArrModal" class="modal-backdrop" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1050; align-items: center; justify-content: center;">
+    <div style="background: #FFFFFF; border-radius: 12px; max-width: 520px; width: 90%; padding: 1.75rem; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+            <h3 style="font-size: 1.15rem; font-weight: 700; color: #0F172A; margin: 0;">✏️ Edit Arrangement Line</h3>
+            <button type="button" class="modal-close" onclick="closeModal('editArrModal')">&times;</button>
+        </div>
+
+        <form id="editArrForm" method="POST" action="">
+            <div class="form-group" style="margin-bottom: 1rem;">
+                <label class="form-label" for="edit_room_name">Exam Room</label>
+                <select id="edit_room_name" name="room_name" class="form-control" required onchange="onRoomChange('edit')">
+                    {% for r in rooms %}
+                    <option value="{{ r.name }}">Room {{ r.name }}</option>
+                    {% endfor %}
+                </select>
+                <div id="edit_room_hint" style="font-size: 0.8rem; margin-top: 0.35rem; color: #475569; font-weight: 600;"></div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 1rem;">
+                <label class="form-label" for="edit_class_or_group">Class or Seating Group</label>
+                <input list="classes_list" id="edit_class_or_group" name="class_or_group" class="form-control" required oninput="onClassChange('edit')" onchange="onClassChange('edit')">
+                <div id="edit_class_hint" style="font-size: 0.8rem; margin-top: 0.35rem; color: #2563EB; font-weight: 600;"></div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label class="form-label" for="edit_from_roll">From Roll</label>
+                    <input type="number" id="edit_from_roll" name="from_roll" class="form-control" min="1" required oninput="checkRollRange('edit')">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="edit_to_roll">To Roll</label>
+                    <input type="number" id="edit_to_roll" name="to_roll" class="form-control" min="1" required oninput="checkRollRange('edit')">
+                </div>
+            </div>
+            <div id="edit_roll_warning" style="font-size: 0.78rem; color: #DC2626; margin-top: -0.5rem; margin-bottom: 0.75rem; display: none;"></div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 0.6rem; margin-top: 1.25rem;">
+                <button type="button" class="btn btn-outline" onclick="closeModal('editArrModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Update Line</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const classStats = {{ class_stats | tojson }};
+    const roomCaps = {{ room_caps | tojson }};
+
+    function onRoomChange(prefix) {
+        const rmSelect = document.getElementById(prefix + '_room_name');
+        const hintEl = document.getElementById(prefix + '_room_hint');
+        if (!rmSelect || !hintEl) return;
+        const val = rmSelect.value;
+        if (roomCaps && roomCaps[val]) {
+            const info = roomCaps[val];
+            hintEl.innerHTML = `🏢 <strong>Room ${val}:</strong> Capacity: <strong>${info.capacity} seats</strong> (${info.benches} benches) &bull; Currently seated: <strong>${info.seated} / ${info.capacity}</strong> &bull; Free Seats to fill: <strong>${info.free}</strong>`;
+            hintEl.style.color = info.free === 0 ? '#15803D' : '#2563EB';
+        } else {
+            hintEl.innerHTML = '';
+        }
+    }
+
+    function onClassChange(prefix) {
+        const clsInput = document.getElementById(prefix + '_class_or_group');
+        const hintEl = document.getElementById(prefix + '_class_hint');
+        const fromInput = document.getElementById(prefix + '_from_roll');
+        const toInput = document.getElementById(prefix + '_to_roll');
+        if (!clsInput || !hintEl) return;
+
+        const val = clsInput.value.trim();
+        if (classStats && classStats[val]) {
+            const info = classStats[val];
+            hintEl.innerHTML = `✓ Available: <strong>${info.count} students</strong> (Rolls ${info.min_roll} to ${info.max_roll})`;
+            hintEl.style.color = '#15803D';
+            if (prefix === 'add' && (!toInput.value || toInput.value === '15')) {
+                fromInput.value = info.min_roll;
+                toInput.value = info.max_roll;
+            }
+        } else if (val) {
+            hintEl.innerHTML = `ℹ️ Custom class or group name`;
+            hintEl.style.color = '#64748B';
+        } else {
+            hintEl.innerHTML = '';
+        }
+        checkRollRange(prefix);
+    }
+
+    function checkRollRange(prefix) {
+        const clsInput = document.getElementById(prefix + '_class_or_group');
+        const toInput = document.getElementById(prefix + '_to_roll');
+        const warnEl = document.getElementById(prefix + '_roll_warning');
+        if (!clsInput || !toInput || !warnEl) return;
+
+        const val = clsInput.value.trim();
+        const toVal = parseInt(toInput.value, 10);
+        if (classStats && classStats[val] && toVal) {
+            const info = classStats[val];
+            if (toVal > info.max_roll) {
+                warnEl.style.display = 'block';
+                warnEl.innerHTML = `⚠️ Note: ${val} only has ${info.count} students (Max Roll: ${info.max_roll}). Entering To Roll ${toVal} will cause a roll mismatch.`;
+            } else {
+                warnEl.style.display = 'none';
+            }
+        } else {
+            warnEl.style.display = 'none';
+        }
+    }
+
+    function openModal(id) {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'flex';
+    }
+    function closeModal(id) {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+    }
+
+    function openEditArrModal(item) {
+        document.getElementById('editArrForm').action = '/arrangement/edit/' + item.id;
+        document.getElementById('edit_room_name').value = item.room_name;
+        document.getElementById('edit_class_or_group').value = item.class_or_group;
+        document.getElementById('edit_from_roll').value = item.from_roll;
+        document.getElementById('edit_to_roll').value = item.to_roll;
+        onRoomChange('edit');
+        onClassChange('edit');
+        openModal('editArrModal');
+    }
+
+    window.addEventListener('click', function(e) {
+        if (e.target.classList.contains('modal-backdrop')) {
+            e.target.style.display = 'none';
+        }
+    });
+</script>
+{% endblock %}

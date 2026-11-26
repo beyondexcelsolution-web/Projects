@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% set active_page = 'rooms' %}
+
+{% block title %}{{ room.name }} - Visual Desk Grid Layout{% endblock %}
+
+{% block content %}
+<div class="card no-print" style="margin-bottom: 1.25rem;">
+    <div class="card-header">
+        <div>
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <a href="{{ url_for('generator_page') }}" class="btn btn-outline btn-sm">← Back to Overview</a>
+                <h2 class="card-title" style="margin: 0;">{{ room.name }} &bull; Classroom Floor Plan</h2>
+            </div>
+            <p class="card-subtitle" style="margin-top: 0.35rem;">
+                Block: <strong>{{ room.block }}</strong> &bull; Floor: <strong>{{ room.floor }}</strong> &bull;
+                Capacity: <strong>{{ room.benches * 2 }} Seats ({{ room.benches }} Benches)</strong> &bull;
+                Seated: <strong>{{ seated_count }} Students</strong> &bull;
+                Invigilator(s): <strong>{{ room.invigilators_required }}</strong>
+            </p>
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+            <button onclick="window.print()" class="btn btn-primary btn-sm">🖨️ Print Desk Plan</button>
+        </div>
+    </div>
+</div>
+
+<!-- Classroom Floor Plan Stage -->
+<div class="classroom-stage">
+    <!-- Front: Blackboard & Teacher Desk -->
+    <div class="blackboard-bar">
+        ⬛ FRONT OF CLASSROOM &bull; BLACKBOARD & TEACHER'S INVIGILATION DESK
+    </div>
+
+    <!-- 2-Seat Benches Grid -->
+    <div class="benches-grid">
+        {% for b_idx in range(1, room.benches + 1) %}
+        {% set s_a = bench_map.get((b_idx, 'A (Left)')) %}
+        {% set s_b = bench_map.get((b_idx, 'B (Right)')) %}
+        <div class="bench-card">
+            <div class="bench-header">
+                <span>🪑 BENCH #{{ b_idx }}</span>
+                <span>
+                    {% if s_a and s_b %}
+                        <span class="badge badge-green" style="font-size: 0.7rem;">Occupied (2/2)</span>
+                    {% elif s_a or s_b %}
+                        <span class="badge badge-amber" style="font-size: 0.7rem;">Partial (1/2)</span>
+                    {% else %}
+                        <span class="badge badge-gray" style="font-size: 0.7rem;">Empty</span>
+                    {% endif %}
+                </span>
+            </div>
+
+            <div class="bench-seats">
+                <!-- Seat A (Left) -->
+                <div class="seat-box" style="{% if s_a %}background: #EFF6FF; border-color: #BFDBFE;{% else %}background: #F8FAFC; border-style: dashed;{% endif %}">
+                    <span class="seat-pos-tag">SEAT A (LEFT)</span>
+                    {% if s_a %}
+                        <span class="badge badge-blue" style="margin-bottom: 0.25rem;">
+                            {{ s_a.full_class }} &bull; Roll {{ s_a.roll_no or '-' }}
+                        </span>
+                        <div class="seat-student-name" title="{{ s_a.student_name }}">{{ s_a.student_name }}</div>
+                        <div class="seat-adm">{{ s_a.adm_no }}</div>
+                    {% else %}
+                        <span style="color: var(--text-light); font-size: 0.78rem;">Vacant</span>
+                    {% endif %}
+                </div>
+
+                <!-- Seat B (Right) -->
+                <div class="seat-box" style="{% if s_b %}background: #ECFDF5; border-color: #A7F3D0;{% else %}background: #F8FAFC; border-style: dashed;{% endif %}">
+                    <span class="seat-pos-tag">SEAT B (RIGHT)</span>
+                    {% if s_b %}
+                        <span class="badge badge-green" style="margin-bottom: 0.25rem;">
+                            {{ s_b.full_class }} &bull; Roll {{ s_b.roll_no or '-' }}
+                        </span>
+                        <div class="seat-student-name" title="{{ s_b.student_name }}">{{ s_b.student_name }}</div>
+                        <div class="seat-adm">{{ s_b.adm_no }}</div>
+                    {% else %}
+                        <span style="color: var(--text-light); font-size: 0.78rem;">Vacant</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Bottom Sign-off for Print -->
+    <div class="print-footer" style="margin-top: 2rem;">
+        <div>Room Invigilator Signature: _______________________</div>
+        <div>Chief Superintendent: _______________________</div>
+    </div>
+</div>
+{% endblock %}

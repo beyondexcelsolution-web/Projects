@@ -1,0 +1,306 @@
+{% extends 'base.html' %}
+{% set active_page = 'dashboard' %}
+
+{% block title %}Start Here - Crescent Islamic High School Seating System{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper" style="max-width: 1100px; margin: 0 auto;">
+
+    <!-- Top Header Banner matching Start Here sheet -->
+    <div style="background: #FFFFFF; border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem 1.75rem; margin-bottom: 1.5rem; box-shadow: var(--shadow-sm); display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem;">
+        <div>
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+                <span class="badge badge-green" style="font-size: 0.8rem; font-weight: 700;">OFFICIAL SCHOOL REPLICA</span>
+                <span style="font-size: 0.85rem; color: #64748B;">Academic Session: <strong>{{ settings.get('academic_year', '2026-27') }}</strong></span>
+            </div>
+            <h2 style="font-size: 1.5rem; font-weight: 800; color: #0F172A; margin: 0;">{{ settings.get('exam_title', 'Periodic Assessment – 2') }}</h2>
+            <p style="font-size: 0.86rem; color: #475569; margin-top: 0.25rem;">
+                Follows the school plan room by room. Edit the <strong>Arrangement</strong> sheet and all printouts update automatically.
+            </p>
+        </div>
+
+        <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
+            <a href="{{ url_for('export_master_excel') }}" class="btn btn-primary" style="background: #16A34A; border-color: #16A34A; font-weight: 600; font-size: 0.85rem;">
+                📊 Download Master Excel (.xlsx)
+            </a>
+        </div>
+    </div>
+
+    <!-- 1. SYSTEM HEALTH CHECKS (Exact replica of Excel 'Start Here' rows 5-15) -->
+    <div style="background: #FFFFFF; border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.75rem; box-shadow: var(--shadow-sm);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 2px solid #F1F5F9; padding-bottom: 0.75rem;">
+            <div>
+                <h3 style="font-size: 1.15rem; font-weight: 800; color: #0F172A; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                    <span>📋</span> Plan Health &amp; Verification Checks
+                </h3>
+                <p style="font-size: 0.82rem; color: #64748B; margin-top: 0.15rem;">All checks must show green <strong>OK</strong> before printing. Red = edit the Arrangement line shown.</p>
+            </div>
+            <div>
+                {% if checks.all_checks_pass %}
+                    <span class="badge badge-green" style="font-size: 0.85rem; padding: 0.35rem 0.85rem;">✓ ALL CHECKS PASS — 100% OK</span>
+                {% elif checks.disagreement_count > 0 or checks.duplicate_count > 0 or checks.over_capacity_count > 0 %}
+                    <span class="badge badge-rose" style="font-size: 0.85rem; padding: 0.35rem 0.85rem;">⚠️ ATTENTION REQUIRED</span>
+                {% else %}
+                    <span class="badge badge-blue" style="font-size: 0.85rem; padding: 0.35rem 0.85rem;">ℹ️ SEATING PLAN IN PROGRESS</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table" style="font-size: 0.88rem;">
+                <thead>
+                    <tr>
+                        <th style="width: 50%;">System Check Item</th>
+                        <th style="width: 25%; text-align: center;">Value / Count</th>
+                        <th style="width: 25%; text-align: center;">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Students loaded</strong> in database</td>
+                        <td style="text-align: center; font-weight: 700; color: #0F172A;">{{ checks.total_students_loaded }}</td>
+                        <td style="text-align: center;"><span class="badge badge-green">OK</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Classes found</strong> (including split groups 11G, 11B, 12G, 12B)</td>
+                        <td style="text-align: center; font-weight: 700; color: #0F172A;">{{ checks.classes_found }}</td>
+                        <td style="text-align: center;"><span class="badge badge-green">OK</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Rooms in use</strong> (Girls Block &amp; Boys Block)</td>
+                        <td style="text-align: center; font-weight: 700; color: #0F172A;">{{ checks.rooms_in_use }} / {{ checks.total_rooms }}</td>
+                        <td style="text-align: center;"><span class="badge badge-green">OK</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Students without a seat</strong> (Unseated)</td>
+                        <td style="text-align: center; font-weight: 700; color: {% if checks.unseated_count == 0 %}#10B981{% else %}#2563EB{% endif %};">{{ checks.unseated_count }}</td>
+                        <td style="text-align: center;">
+                            {% if checks.unseated_count == 0 %}
+                                <span class="badge badge-green">OK</span>
+                            {% else %}
+                                <span class="badge badge-blue">{{ checks.unseated_count }} Remaining</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Students placed twice</strong> (Duplicates)</td>
+                        <td style="text-align: center; font-weight: 700; color: {% if checks.duplicate_count == 0 %}#10B981{% else %}#EF4444{% endif %};">{{ checks.duplicate_count }}</td>
+                        <td style="text-align: center;">
+                            {% if checks.duplicate_count == 0 %}
+                                <span class="badge badge-green">OK</span>
+                            {% else %}
+                                <span class="badge badge-rose">{{ checks.duplicate_count }} Duplicates</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Plan lines that disagree</strong> with the student list</td>
+                        <td style="text-align: center; font-weight: 700; color: {% if checks.disagreement_count == 0 %}#10B981{% else %}#EF4444{% endif %};">{{ checks.disagreement_count }}</td>
+                        <td style="text-align: center;">
+                            {% if checks.disagreement_count == 0 %}
+                                <span class="badge badge-green">OK</span>
+                            {% else %}
+                                <span class="badge badge-rose">{{ checks.disagreement_count }} Line Disagreement(s)</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Rooms over their bench seats</strong> (Over Capacity)</td>
+                        <td style="text-align: center; font-weight: 700; color: {% if checks.over_capacity_count == 0 %}#10B981{% else %}#EF4444{% endif %};">{{ checks.over_capacity_count }}</td>
+                        <td style="text-align: center;">
+                            {% if checks.over_capacity_count == 0 %}
+                                <span class="badge badge-green">OK</span>
+                            {% else %}
+                                <span class="badge badge-rose">Over Capacity</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        {% if checks.disagreements_list %}
+        <div style="background: #FEF2F2; border-top: 1px solid #FECACA; padding: 0.85rem 1.25rem; font-size: 0.84rem; color: #991B1B;">
+            <strong>⚠️ Line Disagreements Detail:</strong>
+            <ul style="margin: 0.35rem 0 0 1.25rem;">
+                {% for d in checks.disagreements_list %}
+                <li>
+                    <strong>Room {{ d.arrangement.room_name }} &bull; Class {{ d.arrangement.class_or_group }}</strong>:
+                    Entered Roll {{ d.arrangement.from_roll }} to {{ d.arrangement.to_roll }} ({{ d.expected }} roll slots), but only <strong>{{ d.found }}</strong> student(s) exist in database for this class/group. (Please edit 'To Roll' to match {{ d.found }}).
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- 2. FOUR INPUT / ENTRY SHEETS (Yellow Sections - The exact 4 input tabs from Excel) -->
+    <div style="margin-bottom: 2rem;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.85rem;">
+            <div>
+                <h3 style="font-size: 1.15rem; font-weight: 800; color: #92400E; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                    <span style="background: #FEF3C7; color: #92400E; padding: 2px 8px; border-radius: 6px; font-size: 0.8rem; border: 1px solid #FDE68A;">INPUT SHEETS</span>
+                    <span>Yellow Entry Tabs (Edit Any School Data Here)</span>
+                </h3>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem;">
+            <!-- Input 1: Settings -->
+            <div style="background: #FFFBEB; border: 2px solid #FDE68A; border-radius: 10px; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 0.75rem; font-weight: 700; color: #B45309; text-transform: uppercase;">INPUT 1</span>
+                        <span style="font-size: 1.25rem;">⚙️</span>
+                    </div>
+                    <h4 style="font-size: 1rem; font-weight: 800; color: #78350F; margin: 0.4rem 0 0.2rem;">Settings Sheet</h4>
+                    <p style="font-size: 0.82rem; color: #92400E; margin: 0;">Exam title, academic session, first exam date, and 8 attendance date columns.</p>
+                </div>
+                <div style="margin-top: 1rem;">
+                    <a href="{{ url_for('settings') }}" class="btn btn-sm btn-primary" style="width: 100%; text-align: center; background: #D97706; border-color: #D97706;">Open Settings &rarr;</a>
+                </div>
+            </div>
+
+            <!-- Input 2: Students -->
+            <div style="background: #FFFBEB; border: 2px solid #FDE68A; border-radius: 10px; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 0.75rem; font-weight: 700; color: #B45309; text-transform: uppercase;">INPUT 2</span>
+                        <span style="font-size: 1.25rem;">👨‍🎓</span>
+                    </div>
+                    <h4 style="font-size: 1rem; font-weight: 800; color: #78350F; margin: 0.4rem 0 0.2rem;">Students Sheet</h4>
+                    <p style="font-size: 0.82rem; color: #92400E; margin: 0;">Active roster: <strong>{{ checks.total_students_loaded }} Students</strong>. Paste or import Class, Adm No, Name.</p>
+                </div>
+                <div style="margin-top: 1rem;">
+                    <a href="{{ url_for('students') }}" class="btn btn-sm btn-primary" style="width: 100%; text-align: center; background: #D97706; border-color: #D97706;">Open Students &rarr;</a>
+                </div>
+            </div>
+
+            <!-- Input 3: Arrangement -->
+            <div style="background: #FFFBEB; border: 2px solid #FDE68A; border-radius: 10px; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 0.75rem; font-weight: 700; color: #B45309; text-transform: uppercase;">INPUT 3</span>
+                        <span style="font-size: 1.25rem;">📐</span>
+                    </div>
+                    <h4 style="font-size: 1rem; font-weight: 800; color: #78350F; margin: 0.4rem 0 0.2rem;">Arrangement Sheet</h4>
+                    <p style="font-size: 0.82rem; color: #92400E; margin: 0;">36 Block Lines: Room, Row (L/R), Class, From Roll, To Roll. Core engine grid.</p>
+                </div>
+                <div style="margin-top: 1rem;">
+                    <a href="{{ url_for('arrangement') }}" class="btn btn-sm btn-primary" style="width: 100%; text-align: center; background: #D97706; border-color: #D97706;">Open Arrangement Grid &rarr;</a>
+                </div>
+            </div>
+
+            <!-- Input 4: Rooms -->
+            <div style="background: #FFFBEB; border: 2px solid #FDE68A; border-radius: 10px; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 0.75rem; font-weight: 700; color: #B45309; text-transform: uppercase;">INPUT 4</span>
+                        <span style="font-size: 1.25rem;">🏫</span>
+                    </div>
+                    <h4 style="font-size: 1rem; font-weight: 800; color: #78350F; margin: 0.4rem 0 0.2rem;">Rooms Sheet</h4>
+                    <p style="font-size: 0.82rem; color: #92400E; margin: 0;">16 Rooms in print order. Benches count &amp; capacity (2 seats per bench).</p>
+                </div>
+                <div style="margin-top: 1rem;">
+                    <a href="{{ url_for('rooms') }}" class="btn btn-sm btn-primary" style="width: 100%; text-align: center; background: #D97706; border-color: #D97706;">Open Rooms &rarr;</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. OUTPUT PRINTOUTS & DOWNLOADS (Green Sections - The exact output tabs from Excel) -->
+    <div style="margin-bottom: 2.5rem;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.85rem;">
+            <div>
+                <h3 style="font-size: 1.15rem; font-weight: 800; color: #065F46; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                    <span style="background: #D1FAE5; color: #065F46; padding: 2px 8px; border-radius: 6px; font-size: 0.8rem; border: 1px solid #A7F3D0;">OUTPUT SHEETS</span>
+                    <span>Green Tabs (Print Directly or Download Word .docx)</span>
+                </h3>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem;">
+            <!-- Output 1: Class Plan -->
+            <div style="background: #ECFDF5; border: 2px solid #A7F3D0; border-radius: 10px; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 0.75rem; font-weight: 700; color: #047857; text-transform: uppercase;">OUTPUT 1</span>
+                        <span style="font-size: 1.25rem;">📋</span>
+                    </div>
+                    <h4 style="font-size: 1rem; font-weight: 800; color: #065F46; margin: 0.4rem 0 0.2rem;">Class Plan</h4>
+                    <p style="font-size: 0.82rem; color: #047857; margin: 0;">Shows CLASS ALLOTTED room column, Roll ranges, and Teachers signature.</p>
+                </div>
+                <div style="display: flex; gap: 0.4rem; margin-top: 1rem;">
+                    <a href="{{ url_for('export_class_plan_docx') }}" class="btn btn-sm btn-primary" style="flex: 1; text-align: center; background: #059669; border-color: #059669;">📥 Word (.docx)</a>
+                    <a href="{{ url_for('preview_class_plan') }}" target="_blank" class="btn btn-sm btn-outline" style="text-align: center;">🖨️ Print</a>
+                </div>
+            </div>
+
+            <!-- Output 2: Room List -->
+            <div style="background: #ECFDF5; border: 2px solid #A7F3D0; border-radius: 10px; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 0.75rem; font-weight: 700; color: #047857; text-transform: uppercase;">OUTPUT 2</span>
+                        <span style="font-size: 1.25rem;">📑</span>
+                    </div>
+                    <h4 style="font-size: 1rem; font-weight: 800; color: #065F46; margin: 0.4rem 0 0.2rem;">Room Notice List</h4>
+                    <p style="font-size: 0.82rem; color: #047857; margin: 0;">Two-Row table (Left Row vs Right Row side-by-side) to paste on exam doors.</p>
+                </div>
+                <div style="display: flex; gap: 0.4rem; margin-top: 1rem;">
+                    <a href="{{ url_for('export_room_list_docx') }}" class="btn btn-sm btn-primary" style="flex: 1; text-align: center; background: #059669; border-color: #059669;">📥 Word (.docx)</a>
+                    <a href="{{ url_for('preview_room_list') }}" target="_blank" class="btn btn-sm btn-outline" style="text-align: center;">🖨️ Print</a>
+                </div>
+            </div>
+
+            <!-- Output 3: Attendance -->
+            <div style="background: #ECFDF5; border: 2px solid #A7F3D0; border-radius: 10px; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 0.75rem; font-weight: 700; color: #047857; text-transform: uppercase;">OUTPUT 3</span>
+                        <span style="font-size: 1.25rem;">📝</span>
+                    </div>
+                    <h4 style="font-size: 1rem; font-weight: 800; color: #065F46; margin: 0.4rem 0 0.2rem;">Attendance Sheet</h4>
+                    <p style="font-size: 0.82rem; color: #047857; margin: 0;">Includes 8 Exam Dates &amp; Days with daily candidate signature blocks.</p>
+                </div>
+                <div style="display: flex; gap: 0.4rem; margin-top: 1rem;">
+                    <a href="{{ url_for('export_attendance_docx') }}" class="btn btn-sm btn-primary" style="flex: 1; text-align: center; background: #059669; border-color: #059669;">📥 Word (.docx)</a>
+                    <a href="{{ url_for('preview_attendance') }}" target="_blank" class="btn btn-sm btn-outline" style="text-align: center;">🖨️ Print</a>
+                </div>
+            </div>
+
+            <!-- Output 4: Master Summary -->
+            <div style="background: #ECFDF5; border: 2px solid #A7F3D0; border-radius: 10px; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 0.75rem; font-weight: 700; color: #047857; text-transform: uppercase;">OUTPUT 4</span>
+                        <span style="font-size: 1.25rem;">🏛️</span>
+                    </div>
+                    <h4 style="font-size: 1rem; font-weight: 800; color: #065F46; margin: 0.4rem 0 0.2rem;">Master Summary</h4>
+                    <p style="font-size: 0.82rem; color: #047857; margin: 0;">Girls Block, Boys Block, Capacity, and Hifz &amp; Hindi subject exemptions.</p>
+                </div>
+                <div style="display: flex; gap: 0.4rem; margin-top: 1rem;">
+                    <a href="{{ url_for('export_master_summary_docx') }}" class="btn btn-sm btn-primary" style="flex: 1; text-align: center; background: #059669; border-color: #059669;">📥 Word (.docx)</a>
+                    <a href="{{ url_for('preview_master_summary') }}" target="_blank" class="btn btn-sm btn-outline" style="text-align: center;">🖨️ Print</a>
+                </div>
+            </div>
+
+            <!-- Output 5: Consolidated Marks Sheet -->
+            <div style="background: #ECFDF5; border: 2px solid #10B981; border-radius: 10px; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 0.75rem; font-weight: 700; color: #047857; text-transform: uppercase;">OUTPUT 5</span>
+                        <span style="font-size: 1.25rem;">📊</span>
+                    </div>
+                    <h4 style="font-size: 1rem; font-weight: 800; color: #065F46; margin: 0.4rem 0 0.2rem;">Consolidated Marks Sheet</h4>
+                    <p style="font-size: 0.82rem; color: #047857; margin: 0;">Class-wise subjects, max marks, student roster, and blank entry cells for handwritten marks evaluation.</p>
+                </div>
+                <div style="display: flex; gap: 0.4rem; margin-top: 1rem; flex-wrap: wrap;">
+                    <a href="{{ url_for('export_consolidated_excel') }}" class="btn btn-sm btn-primary" style="flex: 1; text-align: center; background: #16A34A; border-color: #16A34A; font-weight: 600;">📥 Excel (.xlsx)</a>
+                    <a href="{{ url_for('export_consolidated_docx') }}" class="btn btn-sm btn-outline" style="flex: 1; text-align: center;">📥 Word (.docx)</a>
+                    <a href="{{ url_for('preview_consolidated_sheet') }}" target="_blank" class="btn btn-sm btn-outline" style="flex: 1; text-align: center;">🖨️ Print (A4)</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

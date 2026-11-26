@@ -1,0 +1,206 @@
+{% extends 'base.html' %}
+{% set active_page = 'rooms' %}
+
+{% block title %}Rooms & Benches - Crescent School Seat Management{% endblock %}
+
+{% block content %}
+<div class="rooms-wrapper">
+    <!-- Top Action & Stats Bar -->
+    <div style="background: #FFFFFF; border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: var(--shadow-sm);">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <h2 style="font-size: 1.4rem; font-weight: 800; color: #0F172A; margin: 0;">Examination Rooms &amp; Benches</h2>
+                <p style="font-size: 0.84rem; color: #64748B; margin-top: 0.2rem;">
+                    Active Rooms: <strong>{{ rooms | length }}</strong> &bull; Total Benches: <strong>{{ rooms | sum(attribute='benches') }}</strong> &bull; Total Seating Capacity: <strong>{{ rooms | sum(attribute='capacity') }}</strong> (2 seats per bench)
+                </p>
+            </div>
+            <div>
+                <button type="button" class="btn btn-primary" onclick="openModal('addRoomModal')">➕ Add Exam Room</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rooms Table -->
+    <div style="background: #FFFFFF; border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 2rem; box-shadow: var(--shadow-sm);">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th style="width: 50px;">Order</th>
+                        <th>Room Name</th>
+                        <th>Campus Block</th>
+                        <th style="text-align: center;">Benches</th>
+                        <th style="text-align: center;">Capacity</th>
+                        <th>Floor</th>
+                        <th>Seating Allotment</th>
+                        <th style="text-align: center;">Occupancy</th>
+                        <th style="text-align: right; width: 140px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in rooms %}
+                    <tr>
+                        <td style="font-weight: 700; color: #64748B;">{{ r.print_order }}</td>
+                        <td>
+                            <strong style="font-size: 0.95rem; color: #0F172A;">Room {{ r.name }}</strong>
+                        </td>
+                        <td>
+                            <span class="badge {% if 'Girls' in r.block %}badge-purple{% else %}badge-blue{% endif %}">
+                                {{ r.block }}
+                            </span>
+                        </td>
+                        <td style="text-align: center; font-weight: 600;">{{ r.benches }}</td>
+                        <td style="text-align: center; font-weight: 700; color: #2563EB;">{{ r.capacity }}</td>
+                        <td>
+                            <span style="font-size: 0.82rem; color: #64748B;">{{ r.floor or 'Ground Floor' }}</span>
+                        </td>
+                        <td>
+                            {% if r.allotted_classes_text %}
+                                <span style="font-weight: 600; color: #1E40AF;">{{ r.allotted_classes_text }}</span>
+                                <span class="badge badge-blue" style="margin-left: 0.35rem;">{{ r.seated_count }}</span>
+                            {% else %}
+                                <span style="color: #94A3B8;">None</span>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: center;">
+                            {% if r.is_over_capacity %}
+                                <span class="badge badge-rose">⚠️ Over ({{ r.seated_count }} / {{ r.capacity }})</span>
+                            {% elif r.seated_count == 0 %}
+                                <span class="badge badge-gray">Empty (0 / {{ r.capacity }})</span>
+                            {% elif r.seated_count == r.capacity %}
+                                <span class="badge badge-green">✓ Full ({{ r.seated_count }} / {{ r.capacity }})</span>
+                            {% else %}
+                                <span class="badge badge-blue">{{ r.seated_count }} / {{ r.capacity }} ({{ r.free_seats }} seats free)</span>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: right;">
+                            <button type="button" class="btn btn-sm btn-outline" onclick="openEditRoomModal({{ r | tojson | forceescape }})">✏️ Edit</button>
+                            <form action="{{ url_for('delete_room', room_id=r.id) }}" method="POST" style="display: inline;" onsubmit="return confirm('Delete Room {{ r.name }}? This will remove associated seating assignments.');">
+                                <button type="submit" class="btn btn-sm btn-outline" style="color: #EF4444; border-color: #FECACA;">🗑️</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Add Room -->
+<div id="addRoomModal" class="modal-backdrop" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1050; align-items: center; justify-content: center;">
+    <div style="background: #FFFFFF; border-radius: 12px; max-width: 480px; width: 90%; padding: 1.75rem; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+            <h3 style="font-size: 1.15rem; font-weight: 700; color: #0F172A; margin: 0;">➕ Add Exam Room</h3>
+            <button type="button" class="modal-close" onclick="closeModal('addRoomModal')">&times;</button>
+        </div>
+
+        <form method="POST" action="{{ url_for('add_room') }}">
+            <div class="form-group">
+                <label class="form-label" for="add_room_name">Room Name / Number <span style="color: #EF4444;">*</span></label>
+                <input type="text" id="add_room_name" name="name" class="form-control" required placeholder="e.g. 11A, Hall-1, Lab">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="add_room_block">Campus Block</label>
+                <select id="add_room_block" name="block" class="form-control">
+                    <option value="Girls Block">Girls Block</option>
+                    <option value="Boys Block">Boys Block</option>
+                </select>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label class="form-label" for="add_room_benches">Benches Count <span style="color: #EF4444;">*</span></label>
+                    <input type="number" id="add_room_benches" name="benches" class="form-control" value="15" min="1" required>
+                    <small style="color: #64748B; font-size: 0.74rem;">Capacity = Benches &times; 2</small>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="add_room_floor">Floor Location</label>
+                    <input type="text" id="add_room_floor" name="floor" class="form-control" value="Ground Floor" placeholder="e.g. 1st Floor">
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 0.6rem; margin-top: 1.25rem;">
+                <button type="button" class="btn btn-outline" onclick="closeModal('addRoomModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Create Room</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Edit Room -->
+<div id="editRoomModal" class="modal-backdrop" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1050; align-items: center; justify-content: center;">
+    <div style="background: #FFFFFF; border-radius: 12px; max-width: 480px; width: 90%; padding: 1.75rem; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+            <h3 style="font-size: 1.15rem; font-weight: 700; color: #0F172A; margin: 0;">✏️ Edit Room Configuration</h3>
+            <button type="button" class="modal-close" onclick="closeModal('editRoomModal')">&times;</button>
+        </div>
+
+        <form id="editRoomForm" method="POST" action="">
+            <div class="form-group">
+                <label class="form-label" for="edit_room_name">Room Name <span style="color: #EF4444;">*</span></label>
+                <input type="text" id="edit_room_name" name="name" class="form-control" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="edit_room_block">Campus Block</label>
+                <select id="edit_room_block" name="block" class="form-control">
+                    <option value="Girls Block">Girls Block</option>
+                    <option value="Boys Block">Boys Block</option>
+                </select>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label class="form-label" for="edit_room_benches">Benches Count</label>
+                    <input type="number" id="edit_room_benches" name="benches" class="form-control" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="edit_room_order">Print Display Order</label>
+                    <input type="number" id="edit_room_order" name="print_order" class="form-control" min="1" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="edit_room_floor">Floor Location</label>
+                <input type="text" id="edit_room_floor" name="floor" class="form-control">
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 0.6rem; margin-top: 1.25rem;">
+                <button type="button" class="btn btn-outline" onclick="closeModal('editRoomModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Update Room</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function openModal(id) {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'flex';
+    }
+    function closeModal(id) {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+    }
+
+    function openEditRoomModal(room) {
+        document.getElementById('editRoomForm').action = '/rooms/edit/' + room.id;
+        document.getElementById('edit_room_name').value = room.name;
+        document.getElementById('edit_room_block').value = room.block;
+        document.getElementById('edit_room_benches').value = room.benches;
+        document.getElementById('edit_room_order').value = room.print_order;
+        document.getElementById('edit_room_floor').value = room.floor || 'Ground Floor';
+        openModal('editRoomModal');
+    }
+
+    window.addEventListener('click', function(e) {
+        if (e.target.classList.contains('modal-backdrop')) {
+            e.target.style.display = 'none';
+        }
+    });
+</script>
+{% endblock %}

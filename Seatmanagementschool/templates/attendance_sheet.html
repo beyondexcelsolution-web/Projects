@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% set active_page = 'attendance' %}
+
+{% block title %}Invigilator Attendance Sheets - Crescent Islamic School{% endblock %}
+
+{% block content %}
+<div class="card no-print">
+    <div class="card-header">
+        <div>
+            <h2 class="card-title">📋 Invigilator Attendance Sheets</h2>
+            <span class="card-subtitle">Official room attendance registers with examination dates & signature blocks</span>
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+            <button onclick="window.print()" class="btn btn-primary btn-sm">🖨️ Print All Sheets</button>
+            <a href="{{ url_for('export_docx', doc_type='attendance') }}" class="btn btn-outline btn-sm">📥 Download Word (.docx)</a>
+        </div>
+    </div>
+</div>
+
+{% for rname, students in rooms_dict.items() %}
+<div class="print-sheet page-break" style="font-size: 0.8rem;">
+    <div class="print-header">
+        <h2>{{ exam.name }} ({{ exam.academic_year }})</h2>
+        <h3>Attendance sheet</h3>
+        <p style="font-size: 1.1rem; font-weight: 800; color: #1E40AF; margin-top: 0.35rem;">
+            ROOM NAME : {{ rname }} (TOTAL {{ students|length }})
+        </p>
+    </div>
+
+    <table class="print-table" style="font-size: 0.76rem;">
+        <thead>
+            <tr style="background: #E2E8F0;">
+                <th rowspan="2" style="width: 4%;">S.No</th>
+                <th rowspan="2" style="width: 10%;">Admi.No</th>
+                <th rowspan="2" style="width: 22%; text-align: left;">Name of the Students</th>
+                <th rowspan="2" style="width: 8%;">Class & Sec</th>
+                {% for d in dates_list %}
+                {% set parts = d.split() %}
+                <th style="padding: 0.2rem;">{{ parts[0] }}</th>
+                {% endfor %}
+            </tr>
+            <tr style="background: #F1F5F9;">
+                {% for d in dates_list %}
+                {% set parts = d.split() %}
+                <th style="padding: 0.2rem; font-size: 0.72rem;">{{ parts[1] if parts|length > 1 else '' }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in students %}
+            <tr>
+                <td style="text-align: center;">{{ loop.index }}</td>
+                <td style="text-align: center; font-weight: 600;">{{ s.adm_no }}</td>
+                <td style="text-align: left;">{{ s.student_name }}</td>
+                <td style="text-align: center; font-weight: 600;">{{ s.full_class }}</td>
+                {% for d in dates_list %}
+                <td style="height: 24px;"></td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="print-footer" style="margin-top: 1.5rem;">
+        <div>Invigilator Signature: _______________________</div>
+        <div>Chief Superintendent: _______________________</div>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}

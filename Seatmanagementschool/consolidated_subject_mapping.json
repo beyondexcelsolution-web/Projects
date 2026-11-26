@@ -1,0 +1,1148 @@
+{
+  "GR 11": {
+    "sheet_name": "GR 11",
+    "class_label": "Class",
+    "title": "XI ACCOUNTANCY",
+    "subjects": [
+      {
+        "col": 4,
+        "name": "ENGLISH",
+        "marks": "( 20 M )",
+        "category": "Periodic Assessment-1 JULY (2026-27) CONSOLIDATED SHEET"
+      },
+      {
+        "col": 5,
+        "name": "B. S",
+        "marks": "( 20 M )",
+        "category": ""
+      },
+      {
+        "col": 6,
+        "name": "MATHS",
+        "marks": "( 20 M )",
+        "category": ""
+      },
+      {
+        "col": 7,
+        "name": "ECONOMICS",
+        "marks": "( 20 M )",
+        "category": ""
+      },
+      {
+        "col": 8,
+        "name": "ACCOUNTANCY",
+        "marks": "( 20 M )",
+        "category": ""
+      },
+      {
+        "col": 9,
+        "name": "A.I",
+        "marks": "( 20 M )",
+        "category": ""
+      },
+      {
+        "col": 10,
+        "name": "PSYCHOLOGY",
+        "marks": "( 20 M )",
+        "category": ""
+      },
+      {
+        "col": 11,
+        "name": "ENTREPRENEURSHIP",
+        "marks": "( 20 M )",
+        "category": "Skilled Subject"
+      },
+      {
+        "col": 12,
+        "name": "(             )",
+        "marks": "",
+        "category": "ATTENDANCE"
+      }
+    ]
+  },
+  "gr 12": {
+    "sheet_name": "gr 12",
+    "class_label": "Class",
+    "title": "XII ACCOUNTANCY",
+    "subjects": [
+      {
+        "col": 4,
+        "name": "ENGLISH",
+        "marks": "( 80 M )",
+        "category": "Periodic Assessment-2 OCTOBER  (2026-27) CONSOLIDATED SHEET"
+      },
+      {
+        "col": 5,
+        "name": "B. S",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 6,
+        "name": "MATHS",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 7,
+        "name": "ECONOMICS",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 8,
+        "name": "ACCOUNTANCY",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 9,
+        "name": "A.I",
+        "marks": "( 50 M )",
+        "category": ""
+      },
+      {
+        "col": 10,
+        "name": "PSYCHOLOGY",
+        "marks": "( 70 M )",
+        "category": ""
+      },
+      {
+        "col": 11,
+        "name": "ENTREPRENEURSHIP",
+        "marks": "( 80 M )",
+        "category": "Skilled Subject"
+      }
+    ]
+  },
+  "GR 6A": {
+    "sheet_name": "GR 6A",
+    "class_label": "Class 6 A",
+    "title": "Periodic Assessment-2  OCTOBER  (2026-27) CONSOLIDATED SHEET",
+    "subjects": [
+      {
+        "col": 4,
+        "name": "ENGLISH",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 5,
+        "name": "URDU / HINDI",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 6,
+        "name": "TELUGU",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 7,
+        "name": "MATHS",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 8,
+        "name": "SCIENCE",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 9,
+        "name": "SOCIAL",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 10,
+        "name": "A I",
+        "marks": "( 40 M )",
+        "category": "Skill  Subject"
+      },
+      {
+        "col": 12,
+        "name": "Islamic Studies",
+        "marks": "( 50 M )",
+        "category": "Add.Sub"
+      },
+      {
+        "col": 13,
+        "name": "Quran",
+        "marks": "( 50 M )",
+        "category": ""
+      },
+      {
+        "col": 16,
+        "name": "(             )",
+        "marks": "",
+        "category": "ATTENDANCE"
+      }
+    ]
+  },
+  "GR 6B": {
+    "sheet_name": "GR 6B",
+    "class_label": "Class 6 B",
+    "title": "Periodic Assessment-2  OCTOBER  (2026-27) CONSOLIDATED SHEET",
+    "subjects": [
+      {
+        "col": 4,
+        "name": "ENGLISH",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 5,
+        "name": "URDU / HINDI",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 6,
+        "name": "TELUGU",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 7,
+        "name": "MATHS",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 8,
+        "name": "SCIENCE",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 9,
+        "name": "SOCIAL",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 10,
+        "name": "A I",
+        "marks": "( 40 M )",
+        "category": "Skill  Subject"
+      },
+      {
+        "col": 12,
+        "name": "Islamic Studies",
+        "marks": "( 50 M )",
+        "category": "Add.Sub"
+      },
+      {
+        "col": 13,
+        "name": "Quran",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 16,
+        "name": "(             )",
+        "marks": "",
+        "category": "ATTENDANCE"
+      }
+    ]
+  },
+  "GR 6C": {
+    "sheet_name": "GR 6C",
+    "class_label": "Class 6 C",
+    "title": "Periodic Assessment-2  OCTOBER  (2026-27) CONSOLIDATED SHEET",
+    "subjects": [
+      {
+        "col": 4,
+        "name": "ENGLISH",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 5,
+        "name": "URDU / HINDI",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 6,
+        "name": "TELUGU",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 7,
+        "name": "MATHS",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 8,
+        "name": "SCIENCE",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 9,
+        "name": "SOCIAL",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 10,
+        "name": "A I",
+        "marks": "( 40 M )",
+        "category": "Skill  Subject"
+      },
+      {
+        "col": 12,
+        "name": "Islamic Studies",
+        "marks": "( 50 M )",
+        "category": "Add.Sub"
+      },
+      {
+        "col": 13,
+        "name": "Quran",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 16,
+        "name": "(             )",
+        "marks": "",
+        "category": "ATTENDANCE"
+      }
+    ]
+  },
+  "GR 6 HIFZ": {
+    "sheet_name": "GR 6 HIFZ",
+    "class_label": "Class 6 HIFZ",
+    "title": "Periodic Assessment-2  OCTOBER  (2026-27) CONSOLIDATED SHEET",
+    "subjects": [
+      {
+        "col": 4,
+        "name": "ENGLISH",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 5,
+        "name": "URDU / HINDI",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 6,
+        "name": "TELUGU",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 7,
+        "name": "MATHS",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 8,
+        "name": "SCIENCE",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 9,
+        "name": "SOCIAL",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 10,
+        "name": "A I",
+        "marks": "( 40 M )",
+        "category": "Skill  Subject"
+      },
+      {
+        "col": 12,
+        "name": "Islamic Studies",
+        "marks": "( 50 M )",
+        "category": "Add.Sub"
+      },
+      {
+        "col": 13,
+        "name": "Quran",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 16,
+        "name": "(             )",
+        "marks": "",
+        "category": "ATTENDANCE"
+      }
+    ]
+  },
+  "GR 7 A": {
+    "sheet_name": "GR 7 A",
+    "class_label": "Class 7 A",
+    "title": "Periodic Assessment-2  OCTOBER  (2026-27) CONSOLIDATED SHEET",
+    "subjects": [
+      {
+        "col": 4,
+        "name": "ENGLISH",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 5,
+        "name": "URDU / HINDI",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 6,
+        "name": "TELUGU",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 7,
+        "name": "MATHS",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 8,
+        "name": "SCIENCE",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 9,
+        "name": "SOCIAL",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 10,
+        "name": "A I",
+        "marks": "( 40 M )",
+        "category": "Skill  Subject"
+      },
+      {
+        "col": 12,
+        "name": "Islamic Studies",
+        "marks": "( 50 M )",
+        "category": "Add.Sub"
+      },
+      {
+        "col": 13,
+        "name": "Quran",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 16,
+        "name": "(             )",
+        "marks": "",
+        "category": "ATTENDANCE"
+      }
+    ]
+  },
+  "GR 7 B": {
+    "sheet_name": "GR 7 B",
+    "class_label": "Class 7 B",
+    "title": "Periodic Assessment-2  OCTOBER  (2026-27) CONSOLIDATED SHEET",
+    "subjects": [
+      {
+        "col": 4,
+        "name": "ENGLISH",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 5,
+        "name": "URDU / HINDI",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 6,
+        "name": "TELUGU",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 7,
+        "name": "MATHS",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 8,
+        "name": "SCIENCE",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 9,
+        "name": "SOCIAL",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 10,
+        "name": "A I",
+        "marks": "( 40 M )",
+        "category": "Skill  Subject"
+      },
+      {
+        "col": 12,
+        "name": "Islamic Studies",
+        "marks": "( 50 M )",
+        "category": "Add.Sub"
+      },
+      {
+        "col": 13,
+        "name": "Quran",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 16,
+        "name": "(             )",
+        "marks": "",
+        "category": "ATTENDANCE"
+      }
+    ]
+  },
+  "GR 7 HIFZ (2)": {
+    "sheet_name": "GR 7 HIFZ (2)",
+    "class_label": "Class 7 HIFZ",
+    "title": "Periodic Assessment-2  OCTOBER  (2026-27) CONSOLIDATED SHEET",
+    "subjects": [
+      {
+        "col": 4,
+        "name": "ENGLISH",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 5,
+        "name": "URDU / HINDI",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 6,
+        "name": "TELUGU",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 7,
+        "name": "MATHS",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 8,
+        "name": "SCIENCE",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 9,
+        "name": "SOCIAL",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 10,
+        "name": "A I",
+        "marks": "( 40 M )",
+        "category": "Skill  Subject"
+      },
+      {
+        "col": 12,
+        "name": "Islamic Studies",
+        "marks": "( 50 M )",
+        "category": "Add.Sub"
+      },
+      {
+        "col": 13,
+        "name": "Quran",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 16,
+        "name": "(             )",
+        "marks": "",
+        "category": "ATTENDANCE"
+      }
+    ]
+  },
+  "GR 8 A": {
+    "sheet_name": "GR 8 A",
+    "class_label": "Class 8 A",
+    "title": "Periodic Assessment-2  OCTOBER  (2026-27) CONSOLIDATED SHEET",
+    "subjects": [
+      {
+        "col": 4,
+        "name": "ENGLISH",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 5,
+        "name": "URDU / HINDI",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 6,
+        "name": "TELUGU",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 7,
+        "name": "MATHS",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 8,
+        "name": "SCIENCE",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 9,
+        "name": "SOCIAL",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 10,
+        "name": "A I",
+        "marks": "( 40 M )",
+        "category": "Skill  Subject"
+      },
+      {
+        "col": 12,
+        "name": "Islamic Studies",
+        "marks": "( 50 M )",
+        "category": "Add.Sub"
+      },
+      {
+        "col": 13,
+        "name": "Quran",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 16,
+        "name": "(             )",
+        "marks": "",
+        "category": "ATTENDANCE"
+      }
+    ]
+  },
+  "GR 8 B": {
+    "sheet_name": "GR 8 B",
+    "class_label": "Class 8 B",
+    "title": "Periodic Assessment-2  OCTOBER  (2026-27) CONSOLIDATED SHEET",
+    "subjects": [
+      {
+        "col": 4,
+        "name": "ENGLISH",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 5,
+        "name": "URDU / HINDI",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 6,
+        "name": "TELUGU",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 7,
+        "name": "MATHS",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 8,
+        "name": "SCIENCE",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 9,
+        "name": "SOCIAL",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 10,
+        "name": "A I",
+        "marks": "( 40 M )",
+        "category": "Skill  Subject"
+      },
+      {
+        "col": 12,
+        "name": "Islamic Studies",
+        "marks": "( 50 M )",
+        "category": "Add.Sub"
+      },
+      {
+        "col": 13,
+        "name": "Quran",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 16,
+        "name": "(             )",
+        "marks": "",
+        "category": "ATTENDANCE"
+      }
+    ]
+  },
+  "GR 9 A": {
+    "sheet_name": "GR 9 A",
+    "class_label": "Class 9 A",
+    "title": "Periodic Assessment-2  OCTOBER  (2026-27) CONSOLIDATED SHEET",
+    "subjects": [
+      {
+        "col": 4,
+        "name": "ENGLISH",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 5,
+        "name": "URDU / HINDI",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 6,
+        "name": "TELUGU",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 7,
+        "name": "MATHS",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 8,
+        "name": "SCIENCE",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 9,
+        "name": "SOCIAL",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 10,
+        "name": "A I",
+        "marks": "( 50 M )",
+        "category": "Skill  Subject"
+      },
+      {
+        "col": 11,
+        "name": "Quran",
+        "marks": "( 50 M )",
+        "category": ""
+      },
+      {
+        "col": 14,
+        "name": "(             )",
+        "marks": "",
+        "category": "ATTENDANCE"
+      }
+    ]
+  },
+  "GR 9 B)": {
+    "sheet_name": "GR 9 B)",
+    "class_label": "Class 9 B",
+    "title": "Periodic Assessment-2  OCTOBER  (2026-27) CONSOLIDATED SHEET",
+    "subjects": [
+      {
+        "col": 4,
+        "name": "ENGLISH",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 5,
+        "name": "URDU / HINDI",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 6,
+        "name": "TELUGU",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 7,
+        "name": "MATHS",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 8,
+        "name": "SCIENCE",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 9,
+        "name": "SOCIAL",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 10,
+        "name": "A I",
+        "marks": "( 50 M )",
+        "category": "Skill  Subject"
+      },
+      {
+        "col": 11,
+        "name": "Quran",
+        "marks": "( 50 M )",
+        "category": ""
+      },
+      {
+        "col": 14,
+        "name": "(             )",
+        "marks": "",
+        "category": "ATTENDANCE"
+      }
+    ]
+  },
+  "GR 9 C": {
+    "sheet_name": "GR 9 C",
+    "class_label": "Class 9 C",
+    "title": "Periodic Assessment-2  OCTOBER  (2026-27) CONSOLIDATED SHEET",
+    "subjects": [
+      {
+        "col": 4,
+        "name": "ENGLISH",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 5,
+        "name": "URDU / HINDI",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 6,
+        "name": "TELUGU",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 7,
+        "name": "MATHS",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 8,
+        "name": "SCIENCE",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 9,
+        "name": "SOCIAL",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 10,
+        "name": "A I",
+        "marks": "( 50 M )",
+        "category": "Skill  Subject"
+      },
+      {
+        "col": 11,
+        "name": "Quran",
+        "marks": "( 50 M )",
+        "category": ""
+      },
+      {
+        "col": 14,
+        "name": "(             )",
+        "marks": "",
+        "category": "ATTENDANCE"
+      }
+    ]
+  },
+  "GR 10  A ": {
+    "sheet_name": "GR 10  A ",
+    "class_label": "Class 10 A",
+    "title": "Periodic Assessment-2  OCTOBER  (2026-27) CONSOLIDATED SHEET",
+    "subjects": [
+      {
+        "col": 4,
+        "name": "ENGLISH",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 5,
+        "name": "URDU / HINDI",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 6,
+        "name": "TELUGU",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 7,
+        "name": "MATHS",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 8,
+        "name": "SCIENCE",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 9,
+        "name": "SOCIAL",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 10,
+        "name": "A I",
+        "marks": "( 50 M )",
+        "category": "Skill  Subject"
+      },
+      {
+        "col": 11,
+        "name": "Quran",
+        "marks": "( 50 M )",
+        "category": ""
+      },
+      {
+        "col": 14,
+        "name": "(             )",
+        "marks": "",
+        "category": "ATTENDANCE"
+      }
+    ]
+  },
+  "GR 10 B": {
+    "sheet_name": "GR 10 B",
+    "class_label": "Class 10 B",
+    "title": "Periodic Assessment-2  OCTOBER  (2026-27) CONSOLIDATED SHEET",
+    "subjects": [
+      {
+        "col": 4,
+        "name": "ENGLISH",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 5,
+        "name": "URDU / HINDI",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 6,
+        "name": "TELUGU",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 7,
+        "name": "MATHS",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 8,
+        "name": "SCIENCE",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 9,
+        "name": "SOCIAL",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 10,
+        "name": "A I",
+        "marks": "( 50 M )",
+        "category": "Skill  Subject"
+      },
+      {
+        "col": 11,
+        "name": "Quran",
+        "marks": "( 50 M )",
+        "category": ""
+      },
+      {
+        "col": 14,
+        "name": "(             )",
+        "marks": "",
+        "category": "ATTENDANCE"
+      }
+    ]
+  },
+  "GR 10 C": {
+    "sheet_name": "GR 10 C",
+    "class_label": "Class 10 C",
+    "title": "Periodic Assessment-2  OCTOBER  (2026-27) CONSOLIDATED SHEET",
+    "subjects": [
+      {
+        "col": 4,
+        "name": "ENGLISH",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 5,
+        "name": "URDU / HINDI",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 6,
+        "name": "TELUGU",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 7,
+        "name": "MATHS",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 8,
+        "name": "SCIENCE",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 9,
+        "name": "SOCIAL",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 10,
+        "name": "A I",
+        "marks": "( 50 M )",
+        "category": "Skill  Subject"
+      },
+      {
+        "col": 11,
+        "name": "Quran",
+        "marks": "( 50 M )",
+        "category": ""
+      },
+      {
+        "col": 14,
+        "name": "(             )",
+        "marks": "",
+        "category": "ATTENDANCE"
+      }
+    ]
+  },
+  "GR 10 D": {
+    "sheet_name": "GR 10 D",
+    "class_label": "Class 10 D",
+    "title": "Periodic Assessment-2  OCTOBER  (2026-27) CONSOLIDATED SHEET",
+    "subjects": [
+      {
+        "col": 4,
+        "name": "ENGLISH",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 5,
+        "name": "URDU / HINDI",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 6,
+        "name": "TELUGU",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 7,
+        "name": "MATHS",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 8,
+        "name": "SCIENCE",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 9,
+        "name": "SOCIAL",
+        "marks": "( 80 M )",
+        "category": ""
+      },
+      {
+        "col": 10,
+        "name": "A I",
+        "marks": "( 50 M )",
+        "category": "Skill  Subject"
+      },
+      {
+        "col": 11,
+        "name": "Quran",
+        "marks": "( 50 M )",
+        "category": ""
+      },
+      {
+        "col": 14,
+        "name": "(             )",
+        "marks": "",
+        "category": "ATTENDANCE"
+      }
+    ]
+  }
+}

@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Exam Attendance Sheet - Crescent Islamic High School</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Times+New+Roman&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        @page {
+            size: A4 portrait;
+            margin: 6mm 8mm;
+        }
+        body {
+            background-color: #F1F5F9;
+            color: #000;
+            font-family: 'Times New Roman', serif;
+            margin: 0;
+            padding: 0;
+        }
+        .page {
+            width: 210mm; /* Standard Portrait A4 */
+            min-height: 297mm;
+            margin: 15mm auto;
+            background: white;
+            padding: 8mm 8mm;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            box-sizing: border-box;
+            position: relative;
+        }
+        /* Full width header banner - spans 100% edge-to-edge of content */
+        .banner-img {
+            width: 100%;
+            height: auto;
+            display: block;
+            margin-bottom: 2mm;
+        }
+        .plan-title {
+            text-align: center;
+            font-size: 12pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin: 2mm 0 2mm 0;
+            letter-spacing: 0.5px;
+        }
+        .room-meta {
+            font-size: 10pt;
+            font-weight: bold;
+            margin-bottom: 2mm;
+            display: flex;
+            justify-content: space-between;
+        }
+        /* Full width basic straight line across entire page */
+        .header-divider {
+            width: 100%;
+            border-bottom: 2px solid #000;
+            margin: 0 0 3mm 0;
+        }
+        .att-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 8pt;
+        }
+        .att-table th, .att-table td {
+            border: 1px solid #000;
+            padding: 2px 2.5px;
+            vertical-align: middle;
+        }
+        .att-table th {
+            background-color: #F1F5F9;
+            text-align: center;
+            font-weight: bold;
+            font-size: 7.5pt;
+        }
+        .header-th {
+            border: none !important;
+            background: transparent !important;
+            padding: 0 0 2mm 0 !important;
+            text-align: left !important;
+            font-weight: normal !important;
+        }
+        thead {
+            display: table-header-group;
+        }
+        tr {
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+        .text-center { text-align: center; }
+        .text-left { text-align: left; }
+        .text-right { text-align: right; }
+        .font-bold { font-weight: bold; }
+        .page-break {
+            page-break-after: always;
+            break-after: page;
+        }
+        .top-bar {
+            position: sticky;
+            top: 0;
+            background: #0F172A;
+            color: #FFF;
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            font-family: 'Inter', sans-serif;
+        }
+        @media print {
+            body {
+                background: white !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .top-bar, .no-print { display: none !important; }
+            .page {
+                margin: 0 !important;
+                padding: 0 !important;
+                box-shadow: none !important;
+                border: none !important;
+                width: 100% !important;
+                min-height: auto !important;
+            }
+            .page-break {
+                page-break-after: always !important;
+                break-after: page !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar no-print">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <img src="{{ url_for('static', filename='images/school_logo.png') }}" alt="Logo" style="width: 28px; height: 28px; border-radius: 50%; background: #FFF;">
+            <strong>Exam Attendance Sheets (8 Dates) — Print Preview</strong>
+        </div>
+        <div style="display: flex; gap: 0.75rem;">
+            <a href="{{ url_for('export_attendance_docx') }}" class="btn btn-sm btn-outline" style="color: #FFF; border-color: #64748B;">📥 Download Word (.docx)</a>
+            <button onclick="window.print()" class="btn btn-sm btn-primary" style="padding: 0.4rem 1.25rem; font-weight: bold;">🖨️ Print Attendance</button>
+        </div>
+    </div>
+
+    {% for r in data.rooms_summary %}
+        {% if r.all_students | length > 0 %}
+        <div class="page page-break">
+            <table class="att-table">
+                <thead>
+                    <tr class="header-tr">
+                        <th colspan="{{ 4 + (data.attendance_dates|length) }}" class="header-th">
+                            <img src="{{ url_for('static', filename='images/school_banner_wide.png') }}" alt="Crescent Islamic High School" class="banner-img">
+                            <div class="plan-title">
+                                {{ data.settings.get('exam_title', 'Periodic Assessment – 2') }} ATTENDANCE SHEET {{ data.settings.get('academic_year', '2026-27') }}
+                            </div>
+                            <div class="room-meta">
+                                <span>EXAMINATION ROOM: <strong>ROOM {{ r.name }}</strong> ({{ r.block }})</span>
+                                <span>TOTAL CANDIDATES: <strong>{{ r.all_students | length }}</strong></span>
+                            </div>
+                            <!-- Full-width straight divider line -->
+                            <div class="header-divider"></div>
+                        </th>
+                    </tr>
+                    <tr>
+                        <th rowspan="2" style="width: 24px;">S.No</th>
+                        <th rowspan="2" style="width: 52px;">Admi.No</th>
+                        <th rowspan="2">Name of the Students</th>
+                        <th rowspan="2" style="width: 48px;">Class</th>
+                        {% for d in data.attendance_dates %}
+                        <th style="min-width: 32px; font-size: 7pt;">{{ d.date }}</th>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        {% for d in data.attendance_dates %}
+                        <th style="font-size: 6.5pt; color: #334155;">{{ d.day[:3]|upper }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for st in r.all_students %}
+                    <tr>
+                        <td class="text-center">{{ loop.index }}</td>
+                        <td class="text-center font-bold">{{ st.adm_no }}</td>
+                        <td class="text-left font-bold" style="padding-left: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px;">{{ st.name }}</td>
+                        <td class="text-center">{{ st.seating_group or st.class_name }}</td>
+                        {% for d in data.attendance_dates %}
+                        <td class="text-center" style="height: 18px;"></td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr style="background: #F8FAFC;">
+                        <td colspan="2" class="text-center font-bold"></td>
+                        <td class="text-right font-bold" style="padding-right: 6px;">TOTAL</td>
+                        <td class="text-center font-bold">{{ r.all_students | length }}</td>
+                        {% for d in data.attendance_dates %}
+                        <td class="text-center font-bold" style="height: 18px;">{{ r.all_students | length }}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td colspan="2" class="text-center font-bold"></td>
+                        <td colspan="2" class="text-left font-bold" style="padding-left: 6px; font-size: 7.5pt;">NO. OF PRESENT</td>
+                        {% for d in data.attendance_dates %}
+                        <td class="text-center" style="height: 22px;"></td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td colspan="2" class="text-center font-bold"></td>
+                        <td colspan="2" class="text-left font-bold" style="padding-left: 6px; font-size: 7.5pt;">NO . OF ABSENT</td>
+                        {% for d in data.attendance_dates %}
+                        <td class="text-center" style="height: 22px;"></td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td colspan="2" class="text-center font-bold"></td>
+                        <td colspan="2" class="text-left font-bold" style="padding-left: 6px; font-size: 7.5pt;">SIGN. OF THE INVIGILATOR</td>
+                        {% for d in data.attendance_dates %}
+                        <td class="text-center" style="height: 26px;"></td>
+                        {% endfor %}
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        {% endif %}
+    {% endfor %}
+</body>
+</html>

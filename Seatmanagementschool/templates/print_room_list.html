@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Roomwise Notice Board List - Crescent Islamic High School</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Times+New+Roman&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #F1F5F9;
+            color: #000;
+            font-family: 'Times New Roman', serif;
+            margin: 0;
+            padding: 0;
+        }
+        .page {
+            width: 210mm;
+            min-height: 297mm;
+            margin: 15mm auto;
+            background: white;
+            padding: 10mm 12mm;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            box-sizing: border-box;
+            position: relative;
+        }
+        /* Full width header banner - spans 100% edge-to-edge of content */
+        .banner-img {
+            width: 100%;
+            height: auto;
+            display: block;
+            margin-bottom: 2mm;
+        }
+        .plan-title {
+            text-align: center;
+            font-size: 13pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin: 2mm 0 2mm 0;
+            letter-spacing: 0.5px;
+        }
+        .room-meta {
+            font-size: 11pt;
+            font-weight: bold;
+            margin-bottom: 2mm;
+            display: flex;
+            justify-content: space-between;
+        }
+        /* Full width basic straight line across entire page */
+        .header-divider {
+            width: 100%;
+            border-bottom: 2px solid #000;
+            margin: 0 0 4mm 0;
+        }
+        .single-table-box {
+            width: 100%;
+            border: 1px solid #000;
+        }
+        .row-header {
+            background: #F1F5F9;
+            text-align: center;
+            font-weight: bold;
+            padding: 2.5mm;
+            font-size: 10pt;
+            border-bottom: 1px solid #000;
+        }
+        .notice-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 9pt;
+        }
+        .notice-table th, .notice-table td {
+            border: 1px solid #000;
+            padding: 3px 4px;
+            vertical-align: middle;
+        }
+        .notice-table th {
+            background-color: #F1F5F9;
+            text-align: center;
+            font-weight: bold;
+            font-size: 9pt;
+        }
+        .header-th {
+            border: none !important;
+            background: transparent !important;
+            padding: 0 0 2mm 0 !important;
+            text-align: left !important;
+            font-weight: normal !important;
+        }
+        thead {
+            display: table-header-group;
+        }
+        tr {
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+        .text-center { text-align: center; }
+        .text-left { text-align: left; }
+        .font-bold { font-weight: bold; }
+        .page-break {
+            page-break-after: always;
+            break-after: page;
+        }
+        .top-bar {
+            position: sticky;
+            top: 0;
+            background: #0F172A;
+            color: #FFF;
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            font-family: 'Inter', sans-serif;
+        }
+        @media print {
+            body {
+                background: white !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .top-bar, .no-print { display: none !important; }
+            .page {
+                margin: 0 !important;
+                padding: 0 !important;
+                box-shadow: none !important;
+                border: none !important;
+                width: 100% !important;
+                min-height: auto !important;
+            }
+            .page-break {
+                page-break-after: always !important;
+                break-after: page !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar no-print">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <img src="{{ url_for('static', filename='images/school_logo.png') }}" alt="Logo" style="width: 28px; height: 28px; border-radius: 50%; background: #FFF;">
+            <strong>Roomwise Notice Board List — Print Preview</strong>
+        </div>
+        <div style="display: flex; gap: 0.75rem;">
+            <a href="{{ url_for('export_room_list_docx') }}" class="btn btn-sm btn-outline" style="color: #FFF; border-color: #64748B;">📥 Download Word (.docx)</a>
+            <button onclick="window.print()" class="btn btn-sm btn-primary" style="padding: 0.4rem 1.25rem; font-weight: bold;">🖨️ Print Notice Lists</button>
+        </div>
+    </div>
+
+    {% for r in data.rooms_summary %}
+    <div class="page {% if not loop.last %}page-break{% endif %}">
+        <div class="single-table-box">
+            <table class="notice-table">
+                <thead>
+                    <tr class="header-tr">
+                        <th colspan="4" class="header-th">
+                            <img src="{{ url_for('static', filename='images/school_banner_wide.png') }}" alt="Crescent Islamic High School" class="banner-img">
+                            <div class="plan-title">
+                                ROOMWISE LIST TO DISPLAY ({{ data.settings.get('exam_title', 'Periodic Assessment – 2') }} {{ data.settings.get('academic_year', '2026-27') }})
+                            </div>
+                            <div class="room-meta">
+                                <span>EXAMINATION ROOM: <strong>ROOM {{ r.name }}</strong> ({{ r.block }})</span>
+                                <span>TOTAL CANDIDATES: <strong>{{ r.seated_count }}</strong> / {{ r.capacity }}</span>
+                            </div>
+                            <!-- Full-width straight divider line -->
+                            <div class="header-divider"></div>
+                        </th>
+                    </tr>
+                    <tr>
+                        <th style="width: 45px;">S.N</th>
+                        <th style="width: 120px;">ADMI.NO</th>
+                        <th>NAME OF CANDIDATE</th>
+                        <th style="width: 130px;">CLASS &amp; SEC</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for st in r.all_students %}
+                    <tr>
+                        <td class="text-center">{{ loop.index }}</td>
+                        <td class="text-center font-bold">{{ st.adm_no }}</td>
+                        <td class="text-left font-bold" style="padding-left: 10px;">{{ st.name }}</td>
+                        <td class="text-center">{{ st.seating_group or st.class_name }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" class="text-center" style="padding: 15px; color: #64748B;">No students allotted</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endfor %}
+</body>
+</html>
