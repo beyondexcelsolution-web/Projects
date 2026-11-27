@@ -62,13 +62,31 @@
                 <!-- Initial Button State -->
                 <div id="btnGroupInitial" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
                     <div>
-                        <h4 style="margin: 0 0 0.25rem 0; font-size: 1rem; font-weight: 700; color: #0F172A;">Ready to Update?</h4>
-                        <p style="margin: 0; font-size: 0.85rem; color: #64748B;">One-click automated download &amp; installation. Your existing student data and settings will be preserved.</p>
+                        <h4 style="margin: 0 0 0.25rem 0; font-size: 1rem; font-weight: 700; color: #0F172A;">
+                            {% if update_info.is_downloaded %}
+                            Update Downloaded &amp; Ready to Install!
+                            {% else %}
+                            Ready to Update?
+                            {% endif %}
+                        </h4>
+                        <p style="margin: 0; font-size: 0.85rem; color: #64748B;">
+                            {% if update_info.is_downloaded %}
+                            The setup installer is ready on your PC. Click below to open the setup screen and click Next &rarr; Finish.
+                            {% else %}
+                            One-click automated download &amp; setup wizard. Your existing student data and settings will be preserved.
+                            {% endif %}
+                        </p>
                     </div>
                     <div>
+                        {% if update_info.is_downloaded %}
+                        <button id="btnStartUpdate" onclick="applyUpdateInstallation()" class="btn btn-primary" style="background: #16A34A; border-color: #16A34A; padding: 0.65rem 1.4rem; font-size: 0.95rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; box-shadow: 0 4px 6px -1px rgba(22, 163, 74, 0.3);">
+                            <span>🚀 Open Setup Wizard (Next &gt; Finish)</span>
+                        </button>
+                        {% else %}
                         <button id="btnStartUpdate" onclick="startUpdateDownload('{{ update_info.download_url }}', '{{ update_info.latest_version }}')" class="btn btn-primary" style="background: #16A34A; border-color: #16A34A; padding: 0.65rem 1.4rem; font-size: 0.95rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; box-shadow: 0 4px 6px -1px rgba(22, 163, 74, 0.3);">
                             <span>📥 Download &amp; Install Update</span>
                         </button>
+                        {% endif %}
                     </div>
                 </div>
 
@@ -89,13 +107,18 @@
                     </div>
                 </div>
 
-                <!-- Installing Phase (Hidden by Default) -->
-                <div id="installingSection" style="display: none; text-align: center; padding: 1rem 0;">
-                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">⚙️</div>
-                    <h3 style="font-size: 1.15rem; font-weight: 800; color: #0F172A; margin: 0 0 0.35rem 0;">Applying Update &amp; Restarting...</h3>
-                    <p style="color: #64748B; font-size: 0.88rem; margin: 0 auto; max-width: 500px;">
-                        The update installer is launching. The application will close, apply changes, and restart automatically in a few seconds. Please do not turn off your computer.
+                <!-- Installing Phase: Setup Wizard Window Opened -->
+                <div id="installingSection" style="display: none; text-align: center; padding: 1.25rem 1rem; background: #F0FDF4; border: 2px solid #86EFAC; border-radius: 10px;">
+                    <div style="font-size: 2.2rem; margin-bottom: 0.35rem;">🎉</div>
+                    <h3 style="font-size: 1.25rem; font-weight: 800; color: #166534; margin: 0 0 0.35rem 0;">Setup Wizard Screen Is Open!</h3>
+                    <p style="color: #15803D; font-size: 0.92rem; margin: 0 auto 1.25rem auto; max-width: 550px;">
+                        The installer window has opened on your screen. Please click <strong>"Next"</strong> &rarr; <strong>"Install"</strong> &rarr; <strong>"Finish"</strong> on that window to complete the update and relaunch the system.
                     </p>
+                    <div style="display: flex; justify-content: center; gap: 0.75rem; flex-wrap: wrap;">
+                        <button onclick="applyUpdateInstallation()" class="btn btn-primary" style="background: #16A34A; border-color: #16A34A; font-weight: 700; padding: 0.5rem 1.2rem;">
+                            🚀 Click Here if Setup Screen Did Not Open
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -252,25 +275,24 @@
     }
 
     function applyUpdateInstallation() {
+        document.getElementById('btnGroupInitial').style.display = 'none';
         document.getElementById('progressSection').style.display = 'none';
         document.getElementById('installingSection').style.display = 'block';
 
         fetch('/api/updates/install', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ silent: true })
+            body: JSON.stringify({ silent: false })
         })
         .then(res => res.json())
         .then(data => {
-            // App is closing and relaunching, wait 6 seconds and reload page
-            setTimeout(() => {
-                window.location.reload();
-            }, 6000);
+            if (!data.success) {
+                alert("Error launching setup wizard: " + data.message);
+                resetUI();
+            }
         })
-        .catch(() => {
-            setTimeout(() => {
-                window.location.reload();
-            }, 6000);
+        .catch(err => {
+            console.log("Install request sent:", err);
         });
     }
 

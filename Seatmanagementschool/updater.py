@@ -54,6 +54,18 @@ def check_for_updates():
             remote_tuple = parse_version_tuple(remote_v)
             
             is_newer = remote_tuple > current_tuple
+
+            # Check if installer has already been downloaded in TEMP
+            temp_dir = tempfile.gettempdir()
+            cached_installer = os.path.join(temp_dir, f"Crescent_Setup_v{remote_v}.exe")
+            is_downloaded = os.path.exists(cached_installer) and os.path.getsize(cached_installer) >= 20 * 1024 * 1024
+            if is_downloaded:
+                with _download_lock:
+                    _download_state['status'] = 'completed'
+                    _download_state['progress'] = 100
+                    _download_state['file_path'] = cached_installer
+                    _download_state['version'] = remote_v
+
             return {
                 'success': True,
                 'update_available': is_newer,
@@ -67,6 +79,7 @@ def check_for_updates():
                 'filesize_mb': data.get('filesize_mb', '30 MB'),
                 'mandatory': data.get('mandatory', False),
                 'history': data.get('history', []),
+                'is_downloaded': is_downloaded,
                 'checked_at': time.strftime("%d-%b-%Y %I:%M %p")
             }
     except Exception as e:
@@ -200,60 +213,41 @@ def start_update_download(download_url, version_str):
     t.start()
     return True, "Download started."
 
-def trigger_installer_execution(silent=True):
+def trigger_installer_execution(silent=False):
     """
-    Launches downloaded installer and safely terminates current app to allow overwrite.
+    Launches downloaded installer so the setup wizard window appears visibly on user's screen.
+    Uses native Windows os.startfile (ShellExecute) for full GUI foreground presentation.
     """
     with _download_lock:
         installer_path = _download_state.get('file_path')
-        status = _download_state.get('status')
 
-    if status != 'completed' or not installer_path or not os.path.exists(installer_path):
-        return False, "Installer file not found or download incomplete."
+    # If file_path is missing or not found in memory, scan temp folder
+    if not installer_path or not os.path.exists(installer_path):
+        temp_dir = tempfile.gettempdir()
+        for fname in os.listdir(temp_dir):
+            if fname.startswith("Crescent_Setup_") and fname.endswith(".exe"):
+                cand = os.path.join(temp_dir, fname)
+                if os.path.getsize(cand) >= 20 * 1024 * 1024:
+                    installer_path = cand
+                    break
 
-    appdata = os.environ.get('LOCALAPPDATA', '')
-    installed_exe = os.path.join(appdata, 'Programs', 'Crescent Islamic High School', 'CrescentIslamicHighSchool.exe')
+    if not installer_path or not os.path.exists(installer_path):
+        return False, "Installer file not found. Please click Download Update."
 
-    runner_bat = os.path.join(tempfile.gettempdir(), 'crescent_apply_update.bat')
+    logger.info(f"Opening installer wizard: {installer_path}")
     
-    # Inno Setup flags: /CLOSEAPPLICATIONS forces closing locked files.
-    # If silent: /SILENT shows small progress dialog without wizard prompt.
-    inno_flags = "/CLOSEAPPLICATIONS"
-    if silent:
-        inno_flags += " /SILENT"
+    # Launch with os.startfile so the setup wizard window pops up in the foreground!
+    try:
+        os.startfile(installer_path)
+    except Exception as e:
+        logger.warning(f"os.startfile failed: {e}, falling back to subprocess.Popen")
+        subprocess.Popen([installer_path], shell=True)
 
-    with open(runner_bat, 'w', encoding='utf-8') as f:
-        f.write(f'''@echo off
-title Updating Crescent Islamic High School...
-echo ======================================================
-echo    CRESCENT ISLAMIC HIGH SCHOOL - AUTO UPDATER
-echo ======================================================
-echo Preparing update installation...
-timeout /t 2 /nobreak > nul
-
-echo Closing running application...
-taskkill /F /IM CrescentIslamicHighSchool.exe > nul 2>&1
-timeout /t 1 /nobreak > nul
-
-echo Running installer ({inno_flags})...
-"{installer_path}" {inno_flags}
-
-echo Installation complete. Relaunching application...
-timeout /t 1 /nobreak > nul
-if exist "{installed_exe}" (
-    start "" "{installed_exe}"
-)
-del "%~f0"
-exit
-''')
-
-    DETACHED_PROCESS = 0x00000008
-    subprocess.Popen(['cmd.exe', '/c', runner_bat], creationflags=DETACHED_PROCESS, close_fds=True)
-
-    # Schedule clean server shutdown after 1.5 seconds so client receives OK HTTP response
+    # Allow 4 seconds for frontend to receive response and setup wizard to initialize,
+    # then exit so Inno Setup can overwrite files without file locks.
     def shutdown_process():
-        time.sleep(1.5)
+        time.sleep(4)
         os._exit(0)
 
     threading.Thread(target=shutdown_process, daemon=True).start()
-    return True, "Update initiated. The application will close, apply update, and restart."
+    return True, "Setup Wizard launched on your screen! Please click Next to install."
