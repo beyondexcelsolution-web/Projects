@@ -60,10 +60,15 @@ def is_newer_version(remote_ver: str, local_ver: str = CURRENT_VERSION) -> bool:
     return parse_version(remote_ver) > parse_version(local_ver)
 
 def fetch_remote_manifest(manifest_url: str = UPDATE_MANIFEST_URL) -> Dict[str, Any]:
-    """Fetches the latest version manifest JSON from GitHub."""
+    """Fetches the latest version manifest JSON from GitHub with cache busting."""
+    fetch_url = f"{manifest_url}?t={int(time.time())}"
     req = urllib.request.Request(
-        manifest_url,
-        headers={"User-Agent": "SolarPulse-ERP-Updater/2.0"}
+        fetch_url,
+        headers={
+            "User-Agent": "SolarPulse-ERP-Updater/2.0",
+            "Cache-Control": "no-cache",
+            "Pragma": "no-cache"
+        }
     )
     try:
         with urllib.request.urlopen(req, timeout=10) as resp:
