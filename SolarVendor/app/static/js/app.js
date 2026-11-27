@@ -1843,14 +1843,19 @@ async function pollDownloadProgress() {
 async function executeInstall(silent = true) {
   const confirmMsg = silent 
     ? "Are you ready to run 1-Click Express Update?\n\nThe software will automatically close, apply updates, and relaunch within seconds."
-    : "Launch Standard Setup Wizard?\n\nThe setup installer will open to guide you through updating.";
+    : "Launch Standard Setup Wizard?\n\nThe setup installer will open on your desktop to guide you through updating.";
   
   if (!confirm(confirmMsg)) return;
 
   // Show installation full-screen overlay
-  const overlay = document.createElement("div");
-  overlay.id = "installOverlay";
-  overlay.className = "fixed inset-0 bg-slate-950/95 backdrop-blur-md z-[9999] flex flex-col items-center justify-center p-6 text-center text-white space-y-4 animate-fade-in";
+  let overlay = document.getElementById("installOverlay");
+  if (!overlay) {
+    overlay = document.createElement("div");
+    overlay.id = "installOverlay";
+    overlay.className = "fixed inset-0 bg-slate-950/95 backdrop-blur-md z-[9999] flex flex-col items-center justify-center p-6 text-center text-white space-y-4 animate-fade-in";
+    document.body.appendChild(overlay);
+  }
+
   overlay.innerHTML = `
     <div class="w-16 h-16 rounded-2xl bg-solar-600 flex items-center justify-center shadow-2xl animate-pulse">
       <svg class="w-8 h-8 text-white animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -1859,12 +1864,12 @@ async function executeInstall(silent = true) {
       </svg>
     </div>
     <div class="space-y-1">
-      <h2 class="text-2xl font-black tracking-tight text-white">Installing SolarPulse ERP Update...</h2>
-      <p class="text-sm text-slate-400">Silent installer is executing in background (/SILENT /FORCECLOSEAPPLICATIONS).</p>
-      <p class="text-xs text-amber-400 font-semibold pt-2">Old version is closing. The new updated version will launch automatically.</p>
+      <h2 class="text-2xl font-black tracking-tight text-white">${silent ? "Applying Express Update..." : "Opening Setup Wizard..."}</h2>
+      <p class="text-sm text-slate-400" id="installStatusText">${silent ? "Executing silent update in background. Old version is closing..." : "Launching setup window on your desktop..."}</p>
+      <p class="text-xs text-amber-400 font-semibold pt-2" id="reconnectTimerText">${silent ? "SolarPulse ERP will restart automatically in ~10 seconds." : "Please follow the setup steps in the installer window."}</p>
+      ${!silent ? '<button onclick="document.getElementById(\'installOverlay\').remove()" class="mt-4 bg-slate-800 hover:bg-slate-700 text-xs text-white px-4 py-2 rounded-lg border border-slate-700">Dismiss Overlay</button>' : ''}
     </div>
   `;
-  document.body.appendChild(overlay);
 
   try {
     const res = await fetch("/api/update/install", {
@@ -1873,9 +1878,48 @@ async function executeInstall(silent = true) {
       body: JSON.stringify({ silent: silent })
     });
     const data = await res.json();
-    console.log("Install triggered:", data);
+    
+    if (!res.ok || data.status === "error") {
+      overlay.remove();
+      showToast(data.message || "Failed to launch installer", "error");
+      return;
+    }
+
+    if (silent) {
+      // Countdown and auto-reconnect
+      let countdown = 12;
+      const timerEl = document.getElementById("reconnectTimerText");
+      const interval = setInterval(() => {
+        countdown--;
+        if (timerEl) timerEl.innerText = `Reconnecting to updated SolarPulse ERP in ${countdown}s...`;
+        if (countdown <= 0) {
+          clearInterval(interval);
+          window.location.reload();
+        }
+      }, 1000);
+    } else {
+      setTimeout(() => {
+        if (overlay) overlay.remove();
+      }, 4000);
+    }
+
   } catch (err) {
-    console.error("Install request sent:", err);
+    console.error("Install request sent/failed:", err);
+    // If the server shut down to apply updates, connection drops as expected
+    if (silent) {
+      let countdown = 8;
+      const timerEl = document.getElementById("reconnectTimerText");
+      const interval = setInterval(() => {
+        countdown--;
+        if (timerEl) timerEl.innerText = `Applying updates. Reconnecting in ${countdown}s...`;
+        if (countdown <= 0) {
+          clearInterval(interval);
+          window.location.reload();
+        }
+      }, 1000);
+    } else {
+      if (overlay) overlay.remove();
+    }
   }
 }
 

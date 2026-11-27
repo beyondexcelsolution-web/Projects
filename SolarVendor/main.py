@@ -192,6 +192,7 @@ class UpdateDownloadRequest(BaseModel):
 
 class UpdateInstallRequest(BaseModel):
     silent: Optional[bool] = False
+    installer_path: Optional[str] = None
 
 
 # ===================== API ENDPOINTS =====================
@@ -1165,7 +1166,7 @@ def get_update_download_progress():
 
 @app.post("/api/update/install")
 def install_update_package(req: UpdateInstallRequest):
-    return launch_installer(silent=bool(req.silent))
+    return launch_installer(silent=bool(req.silent), installer_path=req.installer_path)
 
 def render_trial_expired_html(trial_info):
     return f"""<!DOCTYPE html>

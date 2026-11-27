@@ -191,7 +191,7 @@ def get_download_progress() -> Dict[str, Any]:
     with download_lock:
         return dict(download_state)
 
-def launch_installer(silent: bool = False) -> Dict[str, Any]:
+def launch_installer(silent: bool = False, installer_path: Optional[str] = None) -> Dict[str, Any]:
     """
     Launches the downloaded Inno Setup installer.
     If silent=True, runs with Inno Setup switches:
@@ -199,25 +199,35 @@ def launch_installer(silent: bool = False) -> Dict[str, Any]:
     Inno Setup automatically closes old app, updates files, and restarts new version.
     """
     with download_lock:
-        installer_path = download_state.get("installer_path")
-        if not installer_path or not os.path.exists(installer_path):
-            return {"status": "error", "message": "Installer file not found or download incomplete."}
+        target_path = installer_path or download_state.get("installer_path")
 
-    # Command line args for Inno Setup
-    args = [installer_path]
-    if silent:
-        # Very silent express update
-        args.extend(["/SILENT", "/SUPPRESSMSGBOXES", "/FORCECLOSEAPPLICATIONS"])
+        # Fallback: check standard update cache directory
+        if not target_path or not os.path.exists(target_path):
+            expected = os.path.join(UPDATE_DIR, "SolarPulse_ERP_Setup_7Day_Demo.exe")
+            if os.path.exists(expected) and os.path.getsize(expected) > 5 * 1024 * 1024:
+                target_path = expected
+
+        if not target_path or not os.path.exists(target_path):
+            return {
+                "status": "error",
+                "message": "Installer file not found on disk. Please click 'Download & Install Update' again."
+            }
 
     try:
-        # Launch detached process so installer continues running after Python server exits
-        creation_flags = 0x00000008  # DETACHED_PROCESS
         if sys.platform == "win32":
-            subprocess.Popen(args, creationflags=creation_flags, close_fds=True)
+            # Launch via cmd.exe start command so installer runs directly in interactive user session
+            if silent:
+                cmd = f'start "" "{target_path}" /SILENT /SUPPRESSMSGBOXES /FORCECLOSEAPPLICATIONS'
+            else:
+                cmd = f'start "" "{target_path}"'
+            subprocess.Popen(f'cmd.exe /c {cmd}', shell=True)
         else:
+            args = [target_path]
+            if silent:
+                args.extend(["/SILENT", "/SUPPRESSMSGBOXES", "/FORCECLOSEAPPLICATIONS"])
             subprocess.Popen(args)
 
-        # Give installer a second to start, then schedule exit
+        # Allow installer process 2 seconds to initialize, then exit current Python server cleanly
         def delayed_exit():
             time.sleep(2)
             os._exit(0)
@@ -230,3 +240,4 @@ def launch_installer(silent: bool = False) -> Dict[str, Any]:
         }
     except Exception as e:
         return {"status": "error", "message": f"Failed to execute installer: {e}"}
+
