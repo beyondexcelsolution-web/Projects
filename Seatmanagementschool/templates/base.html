@@ -54,6 +54,10 @@
             </nav>
 
             <div class="nav-actions" style="display: flex; align-items: center; gap: 0.6rem;">
+                <a href="{{ url_for('updates_view') }}" class="btn btn-outline" style="padding: 0.48rem 0.85rem; font-size: 0.82rem; font-weight: 600; display: flex; align-items: center; gap: 0.4rem; border-color: #CBD5E1; color: #1E293B; text-decoration: none; background: #FFFFFF;">
+                    <span>🚀 Updates</span>
+                    <span id="navUpdateBadge" style="display: none; background: #EF4444; color: #FFF; font-size: 0.65rem; font-weight: 800; padding: 1px 6px; border-radius: 10px; animation: pulse 2s infinite;">NEW</span>
+                </a>
                 <div class="nav-dropdown" style="position: relative;">
                     <button type="button" class="btn btn-primary" onclick="toggleDropdown('exportDropdown')" style="padding: 0.5rem 0.9rem; font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 0.4rem; background: #16A34A; border-color: #16A34A;">
                         📥 Download Files ▾
@@ -102,6 +106,7 @@
             </div>
             <div style="text-align: right; font-size: 0.76rem;">
                 <span class="badge badge-green" style="font-weight: 600;">ACTIVE LICENSE</span>
+                <a href="{{ url_for('updates_view') }}" class="badge badge-blue" style="text-decoration: none; margin-left: 0.35rem; font-weight: 700;">v{{ app_version }}</a>
                 <span style="color: #64748B; margin-left: 0.5rem;">Device ID: <code style="background: #F1F5F9; padding: 2px 6px; border-radius: 4px; color: #334155; font-weight: 600;">{{ request_hwid }}</code></span>
                 <div style="color: #94A3B8; margin-top: 0.25rem;">Support &amp; Helpline: 7021705408</div>
             </div>
@@ -120,6 +125,20 @@
                 document.querySelectorAll('.dropdown-menu').forEach(d => d.style.display = 'none');
             }
         });
+
+        // Background check for new update notification badge
+        fetch('/api/updates/badge')
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.update_available) {
+                    const badge = document.getElementById('navUpdateBadge');
+                    if (badge) {
+                        badge.style.display = 'inline-block';
+                        badge.title = 'New version ' + data.latest_version + ' is available!';
+                    }
+                }
+            })
+            .catch(() => {});
     </script>
     {% block scripts %}{% endblock %}
 </body>

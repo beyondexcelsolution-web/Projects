@@ -8,10 +8,14 @@ added_files = [
     ('instance', 'instance'),
     ('consoliataed sheet PA 2.xlsx', '.'),
     ('consolidated_subject_mapping.json', '.'),
+    ('version.json', '.'),
 ]
 
 hidden_imports = [
     'license_manager',
+    'updater',
+    'version',
+    'requests',
     'waitress',
     'waitress.adjustments',
     'waitress.channel',

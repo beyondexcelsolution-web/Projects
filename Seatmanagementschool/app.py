@@ -21,6 +21,13 @@ from consolidated_engine import (
     generate_consolidated_excel,
     generate_consolidated_docx
 )
+from version import APP_VERSION
+from updater import (
+    check_for_updates,
+    start_update_download,
+    get_download_status,
+    trigger_installer_execution
+)
 
 app = Flask(
     __name__,
@@ -56,7 +63,8 @@ def inject_global_data():
     conn.close()
     return {
         'request_hwid': get_machine_hwid(),
-        'app_settings': settings
+        'app_settings': settings,
+        'app_version': APP_VERSION
     }
 
 with app.app_context():
@@ -678,6 +686,50 @@ def export_consolidated_docx():
     file_path = os.path.join(exports_dir, 'Consolidated_Marks_Sheet_PA2.docx')
     generate_consolidated_docx(file_path)
     return send_file(file_path, as_attachment=True, download_name='Consolidated_Marks_Sheet_PA2.docx')
+
+# ==============================================================================
+# SOFTWARE UPDATES & VERSION MANAGEMENT
+# ==============================================================================
+@app.route('/updates')
+def updates_view():
+    update_info = check_for_updates()
+    return render_template('updates.html', active_page='updates', update_info=update_info, app_version=APP_VERSION)
+
+@app.route('/api/updates/check')
+def api_updates_check():
+    info = check_for_updates()
+    return jsonify(info)
+
+@app.route('/api/updates/download', methods=['POST'])
+def api_updates_download():
+    data = request.get_json(silent=True) or {}
+    url = data.get('download_url')
+    version = data.get('version', 'latest')
+    if not url:
+        info = check_for_updates()
+        url = info.get('download_url')
+        version = info.get('latest_version', 'latest')
+    if not url:
+        return jsonify({'success': False, 'error': 'Download URL not provided or found.'}), 400
+    success, msg = start_update_download(url, version)
+    return jsonify({'success': success, 'message': msg})
+
+@app.route('/api/updates/status')
+def api_updates_status():
+    status = get_download_status()
+    return jsonify(status)
+
+@app.route('/api/updates/install', methods=['POST'])
+def api_updates_install():
+    data = request.get_json(silent=True) or {}
+    silent = data.get('silent', True)
+    success, msg = trigger_installer_execution(silent=silent)
+    return jsonify({'success': success, 'message': msg})
+
+@app.route('/api/updates/badge')
+def api_updates_badge():
+    info = check_for_updates()
+    return jsonify({'update_available': info.get('update_available', False), 'latest_version': info.get('latest_version')})
 
 if __name__ == '__main__':
     app.run(host='127.0.0.1', port=5000, debug=True)

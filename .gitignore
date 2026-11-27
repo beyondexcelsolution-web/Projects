@@ -4,7 +4,8 @@ __pycache__/
 *.class
 build/
 dist/
-installer_output/
+installer_output/*
+!Seatmanagementschool/installer_output/Crescent_Islamic_High_School_Setup.exe
 *.log
 .env
 .idea/

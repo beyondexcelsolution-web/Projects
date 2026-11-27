@@ -1,5 +1,6 @@
 import sys
 import os
+import json
 import unittest
 from app import app
 from database import get_db
@@ -189,6 +190,18 @@ class TestFlaskEndpoints(unittest.TestCase):
                 self.assertEqual(resp.status_code, 200)
                 self.assertIn(b'Successfully processed 480 students', resp.data)
                 print("✓ Upload /students/upload Dynamic_Report.xlsx passed: 480 students processed")
+
+    def test_09_updates_center(self):
+        resp = self.client.get('/updates')
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn(b'Software Updates', resp.data)
+        print("✓ GET /updates passed: 200 OK")
+
+        resp = self.client.get('/api/updates/status')
+        self.assertEqual(resp.status_code, 200)
+        data = json.loads(resp.data)
+        self.assertIn('status', data)
+        print("✓ GET /api/updates/status passed: 200 OK")
 
 if __name__ == '__main__':
     unittest.main()

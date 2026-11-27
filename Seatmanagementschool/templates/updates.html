@@ -1,0 +1,285 @@
+{% extends 'base.html' %}
+
+{% block title %}Software Updates & Version Center - Crescent Islamic High School{% endblock %}
+
+{% block content %}
+<div style="max-width: 980px; margin: 0 auto; padding: 1.5rem 0 3rem 0;">
+
+    <!-- Breadcrumb / Header Title -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+                <span style="font-size: 1.5rem;">🚀</span>
+                <h1 style="font-size: 1.6rem; font-weight: 800; color: #0F172A; margin: 0;">Software Updates &amp; Release Center</h1>
+            </div>
+            <p style="color: #64748B; font-size: 0.9rem; margin: 0;">
+                Stay updated with the latest examination seating algorithms, official print replica templates, and stability fixes.
+            </p>
+        </div>
+        <div>
+            <button id="btnCheckUpdates" onclick="manualCheckUpdates()" class="btn btn-outline" style="background: #FFFFFF; font-weight: 600; font-size: 0.85rem; display: flex; align-items: center; gap: 0.4rem;">
+                <span id="checkSpinner" style="display: none;">⏳</span>
+                <span>🔄 Check for Updates</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- MAIN STATUS CARD -->
+    <div id="statusCard" class="card" style="border-radius: 12px; border: 1px solid #E2E8F0; padding: 1.75rem; background: #FFFFFF; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 1.5rem;">
+        
+        {% if update_info.update_available %}
+        <!-- STATE A: UPDATE AVAILABLE -->
+        <div id="stateUpdateAvailable">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; border-bottom: 1px solid #F1F5F9; padding-bottom: 1.25rem; margin-bottom: 1.25rem;">
+                <div style="display: flex; align-items: center; gap: 0.85rem;">
+                    <div style="width: 48px; height: 48px; border-radius: 50%; background: #EFF6FF; color: #2563EB; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold;">
+                        🚀
+                    </div>
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span class="badge" style="background: #2563EB; color: #FFF; font-weight: 700; padding: 3px 8px; border-radius: 6px; font-size: 0.75rem;">NEW UPDATE</span>
+                            <h2 style="font-size: 1.25rem; font-weight: 800; color: #1E293B; margin: 0;">{{ update_info.title }}</h2>
+                        </div>
+                        <div style="font-size: 0.82rem; color: #64748B; margin-top: 0.2rem;">
+                            Version: <strong style="color: #2563EB;">v{{ update_info.latest_version }}</strong> &bull; Released: <strong>{{ update_info.release_date }}</strong> &bull; Size: <strong>{{ update_info.filesize_mb }}</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="text-align: right;">
+                    <div style="font-size: 0.78rem; color: #64748B;">Currently Installed</div>
+                    <span class="badge" style="background: #F1F5F9; color: #475569; font-weight: 700; font-size: 0.85rem; padding: 4px 10px; border-radius: 6px;">v{{ app_version }}</span>
+                </div>
+            </div>
+
+            <!-- Summary Text -->
+            <p style="font-size: 0.95rem; color: #334155; line-height: 1.5; margin-bottom: 1.25rem;">
+                {{ update_info.summary }}
+            </p>
+
+            <!-- ACTION AREA: DOWNLOAD & INSTALL -->
+            <div id="actionArea" style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 1.25rem; margin-bottom: 1rem;">
+                <!-- Initial Button State -->
+                <div id="btnGroupInitial" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+                    <div>
+                        <h4 style="margin: 0 0 0.25rem 0; font-size: 1rem; font-weight: 700; color: #0F172A;">Ready to Update?</h4>
+                        <p style="margin: 0; font-size: 0.85rem; color: #64748B;">One-click automated download &amp; installation. Your existing student data and settings will be preserved.</p>
+                    </div>
+                    <div>
+                        <button id="btnStartUpdate" onclick="startUpdateDownload('{{ update_info.download_url }}', '{{ update_info.latest_version }}')" class="btn btn-primary" style="background: #16A34A; border-color: #16A34A; padding: 0.65rem 1.4rem; font-size: 0.95rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; box-shadow: 0 4px 6px -1px rgba(22, 163, 74, 0.3);">
+                            <span>📥 Download &amp; Install Update</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Live Download Progress (Hidden by Default) -->
+                <div id="progressSection" style="display: none;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+                        <span id="progressStatusText" style="font-size: 0.9rem; font-weight: 700; color: #0F172A;">Downloading update package...</span>
+                        <span id="progressPercent" style="font-size: 0.95rem; font-weight: 800; color: #16A34A;">0%</span>
+                    </div>
+
+                    <div style="width: 100%; height: 12px; background: #E2E8F0; border-radius: 6px; overflow: hidden; margin-bottom: 0.5rem;">
+                        <div id="progressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #16A34A, #22C55E); border-radius: 6px; transition: width 0.3s ease;"></div>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; font-size: 0.78rem; color: #64748B;">
+                        <span id="downloadSizeInfo">0 MB / {{ update_info.filesize_mb }}</span>
+                        <span id="downloadSpeedInfo">Connecting to GitHub...</span>
+                    </div>
+                </div>
+
+                <!-- Installing Phase (Hidden by Default) -->
+                <div id="installingSection" style="display: none; text-align: center; padding: 1rem 0;">
+                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">⚙️</div>
+                    <h3 style="font-size: 1.15rem; font-weight: 800; color: #0F172A; margin: 0 0 0.35rem 0;">Applying Update &amp; Restarting...</h3>
+                    <p style="color: #64748B; font-size: 0.88rem; margin: 0 auto; max-width: 500px;">
+                        The update installer is launching. The application will close, apply changes, and restart automatically in a few seconds. Please do not turn off your computer.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        {% else %}
+        <!-- STATE B: SYSTEM UP TO DATE -->
+        <div id="stateUpToDate">
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <div style="width: 54px; height: 54px; border-radius: 50%; background: #DCFCE7; color: #16A34A; display: flex; align-items: center; justify-content: center; font-size: 1.75rem;">
+                        ✓
+                    </div>
+                    <div>
+                        <h2 style="font-size: 1.25rem; font-weight: 800; color: #0F172A; margin: 0 0 0.2rem 0;">You're Using the Latest Version!</h2>
+                        <p style="color: #64748B; font-size: 0.88rem; margin: 0;">
+                            Crescent Islamic High School Examination System is completely up to date. You have all the latest exam printing templates and seating engine improvements.
+                        </p>
+                    </div>
+                </div>
+
+                <div style="text-align: right;">
+                    <div style="font-size: 0.78rem; color: #64748B;">Current Version</div>
+                    <span class="badge" style="background: #16A34A; color: #FFF; font-weight: 700; font-size: 0.9rem; padding: 5px 12px; border-radius: 6px;">v{{ app_version }}</span>
+                    <div style="font-size: 0.72rem; color: #94A3B8; margin-top: 0.3rem;">Checked: {{ update_info.checked_at }}</div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+
+    <!-- WHAT'S NEW SECTION (DETAILED CHANGELOG) -->
+    {% if update_info.highlights %}
+    <div class="card" style="border-radius: 12px; border: 1px solid #E2E8F0; padding: 1.75rem; background: #FFFFFF; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 1.5rem;">
+        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.25rem;">
+            <span style="font-size: 1.2rem;">✨</span>
+            <h3 style="font-size: 1.15rem; font-weight: 800; color: #0F172A; margin: 0;">What's New in this Update (Release Notes)</h3>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr; gap: 0.85rem;">
+            {% for item in update_info.highlights %}
+            <div style="display: flex; align-items: flex-start; gap: 0.85rem; padding: 0.85rem 1rem; border-radius: 8px; background: {% if item.category == 'fix' %}#FFF1F2{% elif item.category == 'new' %}#F0FDF4{% else %}#F8FAFC{% endif %}; border: 1px solid {% if item.category == 'fix' %}#FFE4E6{% elif item.category == 'new' %}#DCFCE7{% else %}#E2E8F0{% endif %};">
+                <span class="badge" style="{% if item.category == 'fix' %}background: #E11D48; color: #FFF;{% elif item.category == 'new' %}background: #16A34A; color: #FFF;{% else %}background: #2563EB; color: #FFF;{% endif %} font-size: 0.7rem; font-weight: 800; padding: 2px 8px; border-radius: 4px; white-space: nowrap; margin-top: 2px;">
+                    {{ item.badge }}
+                </span>
+                <div>
+                    <h4 style="margin: 0 0 0.2rem 0; font-size: 0.92rem; font-weight: 700; color: #0F172A;">{{ item.title }}</h4>
+                    <p style="margin: 0; font-size: 0.85rem; color: #475569; line-height: 1.45;">{{ item.detail }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- PREVIOUS VERSIONS ACCORDION -->
+    {% if update_info.history %}
+    <div class="card" style="border-radius: 12px; border: 1px solid #E2E8F0; padding: 1.5rem 1.75rem; background: #FFFFFF; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+        <h3 style="font-size: 1.05rem; font-weight: 800; color: #0F172A; margin: 0 0 1rem 0;">📜 Version History &amp; Past Releases</h3>
+        
+        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+            {% for h in update_info.history %}
+            <div style="border-left: 3px solid #CBD5E1; padding-left: 1rem;">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <strong style="color: #0F172A; font-size: 0.9rem;">{{ h.title }}</strong>
+                    <span style="font-size: 0.78rem; color: #94A3B8;">({{ h.release_date }})</span>
+                </div>
+                <div style="font-size: 0.82rem; color: #64748B; margin-top: 0.15rem;">{{ h.summary }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+
+<!-- Auto-Updater Client Logic Script -->
+<script>
+    let pollInterval = null;
+
+    function manualCheckUpdates() {
+        const btn = document.getElementById('btnCheckUpdates');
+        const spinner = document.getElementById('checkSpinner');
+        btn.disabled = true;
+        spinner.style.display = 'inline';
+
+        fetch('/api/updates/check')
+            .then(res => res.json())
+            .then(data => {
+                spinner.style.display = 'none';
+                btn.disabled = false;
+                window.location.reload();
+            })
+            .catch(err => {
+                spinner.style.display = 'none';
+                btn.disabled = false;
+                alert("Could not connect to update server. Please verify your internet connection.");
+            });
+    }
+
+    function startUpdateDownload(url, version) {
+        const btn = document.getElementById('btnStartUpdate');
+        btn.disabled = true;
+
+        document.getElementById('btnGroupInitial').style.display = 'none';
+        document.getElementById('progressSection').style.display = 'block';
+
+        fetch('/api/updates/download', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ download_url: url, version: version })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                pollInterval = setInterval(checkDownloadProgress, 500);
+            } else {
+                alert("Update failed: " + data.message);
+                resetUI();
+            }
+        })
+        .catch(err => {
+            alert("Error initiating download: " + err);
+            resetUI();
+        });
+    }
+
+    function checkDownloadProgress() {
+        fetch('/api/updates/status')
+            .then(res => res.json())
+            .then(state => {
+                if (state.status === 'downloading') {
+                    const pct = state.progress || 0;
+                    document.getElementById('progressBar').style.width = pct + '%';
+                    document.getElementById('progressPercent').innerText = pct + '%';
+                    document.getElementById('downloadSizeInfo').innerText = (state.downloaded_mb || 0) + ' MB / ' + (state.total_mb || 0) + ' MB';
+                    document.getElementById('downloadSpeedInfo').innerText = state.speed || 'Downloading...';
+                } else if (state.status === 'completed') {
+                    clearInterval(pollInterval);
+                    document.getElementById('progressBar').style.width = '100%';
+                    document.getElementById('progressPercent').innerText = '100%';
+                    document.getElementById('progressStatusText').innerText = 'Download complete! Applying update...';
+                    
+                    setTimeout(applyUpdateInstallation, 800);
+                } else if (state.status === 'error') {
+                    clearInterval(pollInterval);
+                    alert("Download failed: " + (state.error_message || "Unknown network error"));
+                    resetUI();
+                }
+            })
+            .catch(err => {
+                console.error("Progress check error:", err);
+            });
+    }
+
+    function applyUpdateInstallation() {
+        document.getElementById('progressSection').style.display = 'none';
+        document.getElementById('installingSection').style.display = 'block';
+
+        fetch('/api/updates/install', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ silent: true })
+        })
+        .then(res => res.json())
+        .then(data => {
+            // App is closing and relaunching, wait 6 seconds and reload page
+            setTimeout(() => {
+                window.location.reload();
+            }, 6000);
+        })
+        .catch(() => {
+            setTimeout(() => {
+                window.location.reload();
+            }, 6000);
+        });
+    }
+
+    function resetUI() {
+        document.getElementById('btnGroupInitial').style.display = 'flex';
+        document.getElementById('progressSection').style.display = 'none';
+        document.getElementById('installingSection').style.display = 'none';
+        const btn = document.getElementById('btnStartUpdate');
+        if (btn) btn.disabled = false;
+    }
+</script>
+{% endblock %}

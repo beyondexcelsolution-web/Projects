@@ -1,0 +1,63 @@
+{
+  "version": "2.2.0",
+  "version_code": 220,
+  "release_date": "27-Nov-2026",
+  "title": "v2.2.0 — Print Alignment, Active Entries & In-App Auto-Updater",
+  "summary": "Major update addressing client examination printout formatting, candidate row-wise ordering, repeat banners across multi-page prints, and one-click in-app updates.",
+  "highlights": [
+    {
+      "category": "fix",
+      "badge": "Bug Fix",
+      "title": "Class Seating Plan: Only Allotted Entries",
+      "detail": "Unallotted classes (such as Class 11 & 12) no longer appear with 'ROOM NOT ALLOTTED' or print blank pages. Only classes with active student allotments are printed in natural grade sequence."
+    },
+    {
+      "category": "fix",
+      "badge": "Bug Fix",
+      "title": "Roomwise Notice Board: Strict Room Alignment",
+      "detail": "Students in rooms (e.g., Room 6A) are now ordered strictly by seating arrangement (first all 6A candidates rolls 1-21, then all 7A candidates rolls 1-21). Removed alphabetical name sorting that caused class jumbling."
+    },
+    {
+      "category": "fix",
+      "badge": "Bug Fix",
+      "title": "Exam Attendance Sheet: Row-Aligned Order",
+      "detail": "Candidate listing in Attendance Sheets now strictly mirrors the room notice board arrangement sequence for smooth on-ground invigilation."
+    },
+    {
+      "category": "new",
+      "badge": "New Feature",
+      "title": "Multi-Page Header & School Banner Repeat",
+      "detail": "When lists exceed 1 page, Page 2 and subsequent pages automatically carry the full school wide banner, exam title, room/class metadata, and table header."
+    },
+    {
+      "category": "new",
+      "badge": "New Feature",
+      "title": "One-Click In-App Software Updater",
+      "detail": "Easily check for new releases, view detailed changelogs, and download/install updates directly inside the application with one click."
+    },
+    {
+      "category": "improvement",
+      "badge": "Improvement",
+      "title": "Clean Summary Footer on Attendance Sheet",
+      "detail": "Total, Present, Absent, and Invigilator Signature blocks are positioned only on the final page of each room to maximize candidate row spacing."
+    }
+  ],
+  "download_url": "https://raw.githubusercontent.com/beyondexcelsolution-web/Projects/main/Seatmanagementschool/installer_output/Crescent_Islamic_High_School_Setup.exe",
+  "filesize_bytes": 31063984,
+  "filesize_mb": "29.6 MB",
+  "mandatory": false,
+  "history": [
+    {
+      "version": "2.1.0",
+      "release_date": "26-Nov-2026",
+      "title": "v2.1.0 — Excel Import & Hardware Licensing",
+      "summary": "Added Dynamic Report Excel parsing, single-device hardware lock, and consolidated score sheet export."
+    },
+    {
+      "version": "2.0.0",
+      "release_date": "21-Nov-2026",
+      "title": "v2.0.0 — Official Crescent High School Replicas",
+      "summary": "Redesigned print layouts and Word .docx exports to match official school formats and wide banner letterheads."
+    }
+  ]
+}

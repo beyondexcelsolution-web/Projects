@@ -3,7 +3,7 @@
 
 #define MyAppName "Crescent Islamic High School - Seat Management"
 #define MyAppShortName "Crescent Islamic High School"
-#define MyAppVersion "2.1.0"
+#define MyAppVersion "2.2.0"
 #define MyAppPublisher "Crescent Islamic High School"
 #define MyAppURL "http://127.0.0.1:5000"
 #define MyAppExeName "CrescentIslamicHighSchool.exe"
@@ -44,6 +44,7 @@ Source: "app_icon.ico"; DestDir: "{app}"; Flags: ignoreversion
 Source: "consoliataed sheet PA 2.xlsx"; DestDir: "{app}"; Flags: ignoreversion
 Source: "PA2_Seating_Simple.xlsx"; DestDir: "{app}"; Flags: ignoreversion
 Source: "uploads\Dynamic_Report.xlsx"; DestDir: "{app}"; Flags: ignoreversion; DestName: "Dynamic_Report_Sample.xlsx"
+Source: "version.json"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\{#MyAppShortName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\app_icon.ico"
