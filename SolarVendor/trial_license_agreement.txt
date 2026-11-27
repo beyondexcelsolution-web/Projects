@@ -1,0 +1,31 @@
+================================================================================
+                    SOLARPULSE ERP - 7-DAY DEMO EVALUATION LICENSE
+================================================================================
+
+Software: SolarPulse ERP (Solar Vendor & Project CRM Suite)
+Version: 2.0 (Demo Evaluation Edition)
+Vendor / Developer: SuryaTech Clean Energy Solutions
+Contact Helpline: +91 90000 00000
+Official Email: sales@suryatechenergy.com
+
+IMPORTANT - READ CAREFULLY BEFORE INSTALLING:
+This software is provided to you as a time-limited 7-Day Demo Evaluation version
+for testing and demonstration purposes.
+
+1. EVALUATION PERIOD:
+   - You are granted a non-exclusive license to evaluate all features of this software
+     for a period of seven (7) consecutive calendar days starting from the first time
+     the software is launched on this computer.
+   - After 7 days, the software will automatically lock and display an expiration notice.
+
+2. COMMERCIAL UPGRADE:
+   - To continue using SolarPulse ERP after the 7-day evaluation period or to upgrade
+     to the full lifetime commercial version with white-label vendor branding, please
+     contact SuryaTech Clean Energy Solutions via phone or email.
+
+3. TAMPER DETECTION:
+   - System clock rollbacks or modification of evaluation security files will automatically
+     lock the trial version.
+
+By clicking "Next" and proceeding with the installation, you accept and agree to the
+terms of this 7-day evaluation license agreement.

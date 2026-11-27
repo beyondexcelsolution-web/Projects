@@ -1,0 +1,20 @@
+{
+  "app_name": "SolarPulse ERP",
+  "version": "2.0.0",
+  "version_code": 20000,
+  "release_date": "2026-11-27",
+  "min_required_version": "2.0.0",
+  "release_notes": [
+    "PM Surya Ghar + Odisha State Subsidy updated to Rs 1,38,000 (Combined DBT)",
+    "Manual Gross System Cost input for customized vendor rates",
+    "Strict 5.0% Solar Equipment GST rate applied",
+    "Net Meter Cost & Transportation Cost added without GST",
+    "Quotation Delete option & 1-click WhatsApp proposal sharing",
+    "Separate Invoicing Categories: Proforma Invoices (PI) and GST Tax Invoices (TI)",
+    "3-Way Payments Ledger: Payment In, Payment Out, and Project Site Expenses",
+    "Professional 1-Click In-App Auto-Update System"
+  ],
+  "download_url": "https://raw.githubusercontent.com/beyondexcelsolution-web/Projects/main/SolarVendor/dist_installer/SolarPulse_ERP_Setup_7Day_Demo.exe",
+  "installer_name": "SolarPulse_ERP_Setup_7Day_Demo.exe",
+  "mandatory": false
+}

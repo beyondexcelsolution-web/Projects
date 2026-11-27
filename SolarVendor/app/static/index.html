@@ -1,0 +1,1733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SolarPulse ERP - Solar Vendor & CRM Management System</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- SheetJS for instant client-side Excel generation -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            solar: {
+              50: '#f0fdfa',
+              100: '#ccfbf1',
+              200: '#99f6e4',
+              500: '#14b8a6',
+              600: '#0d9488',
+              700: '#0f766e',
+              800: '#115e59',
+              900: '#134e4a',
+            },
+            amber: {
+              500: '#f59e0b',
+              600: '#d97706',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Custom scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .nav-item.active { background-color: #0f766e; color: #ffffff; }
+    .nav-item.active svg { color: #ffffff; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
+
+  <!-- Top Navigation Bar -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
+    <div class="px-4 sm:px-6 py-3 flex items-center justify-between">
+      
+      <!-- Logo & Company Brand Info -->
+      <div class="flex items-center space-x-3">
+        <button id="sidebarToggle" class="lg:hidden text-slate-600 hover:text-slate-900 focus:outline-none">
+          <i data-lucide="menu" class="w-6 h-6"></i>
+        </button>
+        <div class="flex items-center space-x-2.5 cursor-pointer" onclick="switchTab('dashboard')">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-solar-600 flex items-center justify-center text-white shadow-md">
+            <i data-lucide="sun-medium" class="w-6 h-6 animate-spin-slow"></i>
+          </div>
+          <div>
+            <div class="flex items-center space-x-2">
+              <h1 id="brandCompanyName" class="font-bold text-lg text-slate-900 leading-tight">SuryaTech Clean Energy</h1>
+              <span id="trialBadge" class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-amber-300 flex items-center space-x-1">
+                <i data-lucide="clock" class="w-3 h-3 text-amber-600"></i>
+                <span id="trialBadgeText">7-Day Demo: 7 Days Left</span>
+              </span>
+              <!-- Auto-Update Notification Pill -->
+              <button id="headerUpdateBtn" onclick="switchTab('updates')" class="hidden items-center space-x-1.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full shadow-sm transition animate-pulse">
+                <i data-lucide="arrow-up-circle" class="w-3 h-3"></i>
+                <span id="headerUpdateText">Update Ready</span>
+              </button>
+            </div>
+            <p id="brandTagline" class="text-xs text-slate-500">Solar ERP & CRM Suite • Odisha DISCOM Ready</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Center Search Bar -->
+      <div class="hidden md:flex items-center flex-1 max-w-md mx-6">
+        <div class="relative w-full">
+          <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+          <input type="text" id="globalSearchInput" placeholder="Search customer, phone, consumer no, quote or project..." 
+                 class="w-full pl-9 pr-4 py-1.5 text-sm bg-slate-100 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-solar-600 focus:bg-white transition">
+        </div>
+      </div>
+
+      <!-- Right Header Tools: Role Switcher & Actions -->
+      <div class="flex items-center space-x-3">
+        
+        <!-- Role Switcher (Simulates different user roles during customer demo) -->
+        <div class="flex items-center space-x-2 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">
+          <i data-lucide="shield-check" class="w-4 h-4 text-solar-700"></i>
+          <span class="text-xs font-semibold text-slate-600 hidden sm:inline">Role:</span>
+          <select id="roleSelector" onchange="changeDemoRole(this.value)" class="bg-transparent text-xs font-bold text-solar-800 focus:outline-none cursor-pointer">
+            <option value="Admin">👑 Admin / Owner</option>
+            <option value="Sales">💼 Sales Executive</option>
+            <option value="Survey">📐 Site Survey Engineer</option>
+            <option value="Project">🛠️ Project Head</option>
+            <option value="DISCOM">⚡ DISCOM Liaison</option>
+            <option value="Accounts">💰 Accounts Officer</option>
+          </select>
+        </div>
+
+        <!-- Quick Calculator Action -->
+        <button onclick="switchTab('calculator')" class="hidden sm:flex items-center space-x-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold px-3 py-2 rounded-lg shadow-sm transition">
+          <i data-lucide="calculator" class="w-4 h-4"></i>
+          <span>Solar Calc</span>
+        </button>
+
+        <!-- White-Label & Settings modal button -->
+        <button onclick="openSettingsModal()" title="Vendor White-Label Settings" class="p-2 text-slate-600 hover:text-solar-700 hover:bg-slate-100 rounded-lg transition">
+          <i data-lucide="settings" class="w-5 h-5"></i>
+        </button>
+
+        <!-- Reset Demo Data -->
+        <button onclick="resetDemoData()" title="Reset to Pristine Demo State" class="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition">
+          <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
+        </button>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Body with Sidebar & Content -->
+  <div class="flex-1 flex overflow-hidden">
+    
+    <!-- Left Navigation Sidebar -->
+    <aside id="sidebar" class="w-64 bg-white border-r border-slate-200 flex flex-col justify-between hidden lg:flex shrink-0">
+      <div class="p-4 space-y-1">
+        
+        <div class="px-3 py-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Main Modules</div>
+        
+        <a href="#dashboard" onclick="switchTab('dashboard')" class="nav-item active flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-100 transition" data-tab="dashboard">
+          <i data-lucide="layout-dashboard" class="w-4 h-4 text-slate-500"></i>
+          <span>Dashboard Overview</span>
+        </a>
+
+        <a href="#leads" onclick="switchTab('leads')" class="nav-item flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-100 transition" data-tab="leads">
+          <i data-lucide="users" class="w-4 h-4 text-slate-500"></i>
+          <span class="flex-1">Leads & CRM</span>
+          <span id="leadCountBadge" class="bg-solar-100 text-solar-800 text-xs px-2 py-0.5 rounded-full font-bold">7</span>
+        </a>
+
+        <a href="#surveys" onclick="switchTab('surveys')" class="nav-item flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-100 transition" data-tab="surveys">
+          <i data-lucide="compass" class="w-4 h-4 text-slate-500"></i>
+          <span>Site Feasibility Survey</span>
+        </a>
+
+        <a href="#calculator" onclick="switchTab('calculator')" class="nav-item flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-100 transition" data-tab="calculator">
+          <i data-lucide="zap" class="w-4 h-4 text-slate-500"></i>
+          <span>PM Surya Ghar Calc</span>
+        </a>
+
+        <a href="#quotations" onclick="switchTab('quotations')" class="nav-item flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-100 transition" data-tab="quotations">
+          <i data-lucide="file-text" class="w-4 h-4 text-slate-500"></i>
+          <span>Quotations & BOM</span>
+        </a>
+
+        <div class="pt-3 px-3 py-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Execution & Ops</div>
+
+        <a href="#projects" onclick="switchTab('projects')" class="nav-item flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-100 transition" data-tab="projects">
+          <i data-lucide="hammer" class="w-4 h-4 text-slate-500"></i>
+          <span class="flex-1">Projects & Execution</span>
+          <span id="activeProjectsBadge" class="bg-amber-100 text-amber-800 text-xs px-2 py-0.5 rounded-full font-bold">3</span>
+        </a>
+
+        <a href="#discom" onclick="switchTab('discom')" class="nav-item flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-100 transition" data-tab="discom">
+          <i data-lucide="activity" class="w-4 h-4 text-slate-500"></i>
+          <span>DISCOM & Net Metering</span>
+        </a>
+
+        <a href="#invoices" onclick="switchTab('invoices')" class="nav-item flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-100 transition" data-tab="invoices">
+          <i data-lucide="receipt" class="w-4 h-4 text-slate-500"></i>
+          <span>Billing & GST Invoices</span>
+        </a>
+
+        <a href="#payments" onclick="switchTab('payments')" class="nav-item flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-100 transition" data-tab="payments">
+          <i data-lucide="wallet" class="w-4 h-4 text-slate-500"></i>
+          <span>Payments Ledger</span>
+        </a>
+
+        <div class="pt-3 px-3 py-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Exports & Analytics</div>
+
+        <a href="#reports" onclick="switchTab('reports')" class="nav-item flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-100 transition" data-tab="reports">
+          <i data-lucide="bar-chart-3" class="w-4 h-4 text-slate-500"></i>
+          <span>Reports & Analytics</span>
+        </a>
+
+        <div class="pt-3 px-3 py-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider">System & Cloud</div>
+
+        <a href="#updates" onclick="switchTab('updates')" class="nav-item flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-100 transition relative" data-tab="updates">
+          <i data-lucide="sparkles" class="w-4 h-4 text-amber-500"></i>
+          <span class="flex-1">Software Updates</span>
+          <span id="updateNavBadge" class="hidden px-1.5 py-0.5 rounded-full bg-emerald-500 text-white text-[9px] font-black uppercase tracking-wider animate-pulse">New</span>
+        </a>
+
+      </div>
+
+      <!-- Quick Export Master Button in Sidebar bottom -->
+      <div class="p-4 border-t border-slate-200 bg-slate-50">
+        <a href="/api/export/excel/master" download class="w-full flex items-center justify-center space-x-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 py-2 px-3 rounded-lg text-xs font-semibold shadow-sm transition">
+          <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-600"></i>
+          <span>Master Excel Export</span>
+        </a>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+      
+      <!-- ================= 1. DASHBOARD TAB ================= -->
+      <section id="tab-dashboard" class="tab-content active space-y-6">
+        
+        <!-- Welcome & Fast Action Bar -->
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Solar Operations Dashboard</h2>
+            <p class="text-sm text-slate-500">Live operational metrics, project pipeline, and financial performance.</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <button onclick="openLeadModal()" class="flex items-center space-x-1.5 bg-solar-700 hover:bg-solar-800 text-white px-3.5 py-2 rounded-lg text-xs font-semibold shadow-sm transition">
+              <i data-lucide="user-plus" class="w-4 h-4"></i>
+              <span>+ New Lead</span>
+            </button>
+            <button onclick="openSurveyModal()" class="flex items-center space-x-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 px-3.5 py-2 rounded-lg text-xs font-semibold shadow-sm transition">
+              <i data-lucide="clipboard-check" class="w-4 h-4 text-solar-700"></i>
+              <span>+ Site Survey</span>
+            </button>
+            <button onclick="switchTab('calculator')" class="flex items-center space-x-1.5 bg-amber-500 hover:bg-amber-600 text-white px-3.5 py-2 rounded-lg text-xs font-semibold shadow-sm transition">
+              <i data-lucide="sun" class="w-4 h-4"></i>
+              <span>+ Quick Sizing</span>
+            </button>
+            <a href="/api/export/excel/master" class="flex items-center space-x-1.5 bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2 rounded-lg text-xs font-semibold shadow-sm transition">
+              <i data-lucide="download" class="w-4 h-4"></i>
+              <span>Export Excel</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- KPI SUMMARY CARDS (ALL CLICKABLE TO INSTANTLY FILTER/DRILL-DOWN) -->
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          
+          <!-- Card 1: Leads -->
+          <div onclick="switchTab('leads')" class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-solar-500 transition cursor-pointer group">
+            <div class="flex items-center justify-between text-slate-500 mb-2">
+              <span class="text-xs font-semibold uppercase">Total Leads</span>
+              <div class="p-1.5 bg-blue-50 text-blue-600 rounded-lg group-hover:bg-blue-600 group-hover:text-white transition">
+                <i data-lucide="users" class="w-4 h-4"></i>
+              </div>
+            </div>
+            <div id="kpiTotalLeads" class="text-2xl font-bold text-slate-900">--</div>
+            <div class="text-[11px] text-emerald-600 font-medium mt-1 flex items-center">
+              <span id="kpiWonLeads">-- won</span> • <span id="kpiConversionRate">--%</span> conv.
+            </div>
+          </div>
+
+          <!-- Card 2: Active Projects -->
+          <div onclick="switchTab('projects')" class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-solar-500 transition cursor-pointer group">
+            <div class="flex items-center justify-between text-slate-500 mb-2">
+              <span class="text-xs font-semibold uppercase">Active Projects</span>
+              <div class="p-1.5 bg-amber-50 text-amber-600 rounded-lg group-hover:bg-amber-600 group-hover:text-white transition">
+                <i data-lucide="hammer" class="w-4 h-4"></i>
+              </div>
+            </div>
+            <div id="kpiActiveProjects" class="text-2xl font-bold text-slate-900">--</div>
+            <div class="text-[11px] text-slate-500 font-medium mt-1">
+              <span id="kpiCommissionedProjects">--</span> commissioned
+            </div>
+          </div>
+
+          <!-- Card 3: Installed Capacity -->
+          <div onclick="switchTab('projects')" class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-solar-500 transition cursor-pointer group">
+            <div class="flex items-center justify-between text-slate-500 mb-2">
+              <span class="text-xs font-semibold uppercase">Solar Capacity</span>
+              <div class="p-1.5 bg-teal-50 text-teal-600 rounded-lg group-hover:bg-teal-600 group-hover:text-white transition">
+                <i data-lucide="zap" class="w-4 h-4"></i>
+              </div>
+            </div>
+            <div class="text-2xl font-bold text-slate-900"><span id="kpiInstalledKw">--</span> <span class="text-sm font-normal text-slate-500">kW</span></div>
+            <div class="text-[11px] text-teal-700 font-medium mt-1">
+              +<span id="kpiPipelineKw">--</span> kW pipeline
+            </div>
+          </div>
+
+          <!-- Card 4: Total Contract Revenue -->
+          <div onclick="switchTab('invoices')" class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-solar-500 transition cursor-pointer group">
+            <div class="flex items-center justify-between text-slate-500 mb-2">
+              <span class="text-xs font-semibold uppercase">Contract Value</span>
+              <div class="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg group-hover:bg-emerald-600 group-hover:text-white transition">
+                <i data-lucide="indian-rupee" class="w-4 h-4"></i>
+              </div>
+            </div>
+            <div id="kpiTotalContract" class="text-2xl font-bold text-slate-900">₹--</div>
+            <div class="text-[11px] text-slate-500 font-medium mt-1">
+              Booked orders
+            </div>
+          </div>
+
+          <!-- Card 5: Pending Collections -->
+          <div onclick="switchTab('invoices')" class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-solar-500 transition cursor-pointer group">
+            <div class="flex items-center justify-between text-slate-500 mb-2">
+              <span class="text-xs font-semibold uppercase">Pending Due</span>
+              <div class="p-1.5 bg-red-50 text-red-600 rounded-lg group-hover:bg-red-600 group-hover:text-white transition">
+                <i data-lucide="alert-circle" class="w-4 h-4"></i>
+              </div>
+            </div>
+            <div id="kpiPendingCollection" class="text-2xl font-bold text-red-600">₹--</div>
+            <div class="text-[11px] text-slate-500 font-medium mt-1">
+              ₹<span id="kpiCollected">--</span> collected
+            </div>
+          </div>
+
+          <!-- Card 6: DISCOM Approvals Pending -->
+          <div onclick="switchTab('discom')" class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-solar-500 transition cursor-pointer group">
+            <div class="flex items-center justify-between text-slate-500 mb-2">
+              <span class="text-xs font-semibold uppercase">DISCOM Active</span>
+              <div class="p-1.5 bg-purple-50 text-purple-600 rounded-lg group-hover:bg-purple-600 group-hover:text-white transition">
+                <i data-lucide="activity" class="w-4 h-4"></i>
+              </div>
+            </div>
+            <div id="kpiDiscomPending" class="text-2xl font-bold text-slate-900">--</div>
+            <div class="text-[11px] text-purple-700 font-medium mt-1">
+              ₹<span id="kpiSubsidyPipeline">--</span> subsidy queue
+            </div>
+          </div>
+
+        </div>
+
+        <!-- CHARTS ROW (Interactive & Clickable) -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          <!-- Chart 1: Installation & Capacity Trend -->
+          <div class="lg:col-span-2 bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <h3 class="font-bold text-slate-800 text-base">Monthly Solar Installations & Revenue</h3>
+                <p class="text-xs text-slate-500">Cumulative installed kW capacity and project billings (in ₹ Lakhs)</p>
+              </div>
+              <span class="text-xs font-semibold text-solar-700 bg-solar-50 px-2 py-1 rounded">2026 Run Rate</span>
+            </div>
+            <div class="h-64">
+              <canvas id="growthChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Chart 2: Lead Conversion Funnel -->
+          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <h3 class="font-bold text-slate-800 text-base">Sales Conversion Funnel</h3>
+                <p class="text-xs text-slate-500">Lead to Commissioning stages</p>
+              </div>
+              <i data-lucide="filter" class="w-4 h-4 text-slate-400"></i>
+            </div>
+            <div class="h-64">
+              <canvas id="funnelChart"></canvas>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- SECONDARY CHARTS & LIVE PROJECTS PREVIEW -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          <!-- Chart 3: DISCOM Approval Statuses -->
+          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+            <h3 class="font-bold text-slate-800 text-base mb-1">DISCOM Status Breakdown</h3>
+            <p class="text-xs text-slate-500 mb-4">Net metering & inspection status</p>
+            <div class="h-56 flex items-center justify-center">
+              <canvas id="discomChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Table: Live Projects Execution Snapshot -->
+          <div class="lg:col-span-2 bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <div>
+                  <h3 class="font-bold text-slate-800 text-base">Ongoing Project Milestones</h3>
+                  <p class="text-xs text-slate-500">Track execution phases from structure to DISCOM sync</p>
+                </div>
+                <button onclick="switchTab('projects')" class="text-xs font-semibold text-solar-700 hover:underline">View All Projects →</button>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                  <thead class="bg-slate-50 text-slate-600 font-semibold uppercase text-[10px]">
+                    <tr>
+                      <th class="py-2 px-3">Project</th>
+                      <th class="py-2 px-3">Customer</th>
+                      <th class="py-2 px-3">Capacity</th>
+                      <th class="py-2 px-3">DISCOM</th>
+                      <th class="py-2 px-3">Stage</th>
+                      <th class="py-2 px-3">Progress</th>
+                    </tr>
+                  </thead>
+                  <tbody id="dashboardProjectsTable" class="divide-y divide-slate-100">
+                    <!-- Populated dynamically via JS -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+              <span>Showing high-priority active rooftop installations</span>
+              <button onclick="openLeadModal()" class="text-solar-700 font-semibold hover:underline">+ New Project Order</button>
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+            <!-- ================= 2. LEADS & CRM TAB ================= -->
+      <section id="tab-leads" class="tab-content space-y-6">
+        
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Leads & Customer CRM</h2>
+            <p class="text-sm text-slate-500">Manage inquiries, consumer numbers, sanctioned load, and quotation stages.</p>
+          </div>
+          <div class="flex items-center space-x-2">
+            <button onclick="openLeadModal()" class="flex items-center space-x-1.5 bg-solar-700 hover:bg-solar-800 text-white px-3.5 py-2 rounded-lg text-xs font-semibold shadow-sm transition">
+              <i data-lucide="plus" class="w-4 h-4"></i>
+              <span>Add Customer Lead</span>
+            </button>
+            <a href="/api/export/excel/leads" class="flex items-center space-x-1.5 bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2 rounded-lg text-xs font-semibold shadow-sm transition">
+              <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+              <span>Export Leads (.xlsx)</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-3">
+          <div class="flex flex-wrap items-center gap-3">
+            <div class="flex items-center space-x-1.5 text-xs text-slate-600">
+              <span class="font-semibold">Status:</span>
+              <select id="leadStatusFilter" onchange="loadLeads()" class="bg-slate-50 border border-slate-200 rounded px-2 py-1 text-xs font-medium">
+                <option value="All">All Statuses</option>
+                <option value="New">New</option>
+                <option value="Survey Scheduled">Survey Scheduled</option>
+                <option value="Quoted">Quoted</option>
+                <option value="Won">Won</option>
+                <option value="Lost">Lost</option>
+              </select>
+            </div>
+
+            <div class="flex items-center space-x-1.5 text-xs text-slate-600">
+              <span class="font-semibold">DISCOM:</span>
+              <select id="leadDiscomFilter" onchange="loadLeads()" class="bg-slate-50 border border-slate-200 rounded px-2 py-1 text-xs font-medium">
+                <option value="All">All DISCOMs</option>
+                <option value="TPCODL">TPCODL (Central Odisha)</option>
+                <option value="TPNODL">TPNODL (Northern Odisha)</option>
+                <option value="TPWODL">TPWODL (Western Odisha)</option>
+                <option value="TPSODL">TPSODL (Southern Odisha)</option>
+                <option value="Other">Other States / DISCOMs</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="text-xs text-slate-500">
+            Total Leads: <b id="leadsFilteredCount" class="text-slate-800">0</b>
+          </div>
+        </div>
+
+        <!-- Leads Table -->
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-50 text-slate-600 font-semibold uppercase text-[11px] border-b border-slate-200">
+                <tr>
+                  <th class="py-3 px-4">Customer Name</th>
+                  <th class="py-3 px-4">Contact Info</th>
+                  <th class="py-3 px-4">Location / City</th>
+                  <th class="py-3 px-4">Consumer No & DISCOM</th>
+                  <th class="py-3 px-4">Monthly Bill & kW</th>
+                  <th class="py-3 px-4">Status</th>
+                  <th class="py-3 px-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="leadsTableBody" class="divide-y divide-slate-100">
+                <!-- Populated dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </section>
+
+            <!-- ================= 3. SITE SURVEY TAB ================= -->
+      <section id="tab-surveys" class="tab-content space-y-6">
+        
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Site Feasibility Surveys</h2>
+            <p class="text-sm text-slate-500">Rooftop shadow analysis, azimuth, tilt angle, AC/DC cable distance, and feasibility reports.</p>
+          </div>
+          <button onclick="openSurveyModal()" class="flex items-center space-x-1.5 bg-solar-700 hover:bg-solar-800 text-white px-3.5 py-2 rounded-lg text-xs font-semibold shadow-sm transition">
+            <i data-lucide="plus" class="w-4 h-4"></i>
+            <span>+ New Site Survey</span>
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="surveysCardsContainer">
+          <!-- Populated dynamically -->
+        </div>
+
+      </section>
+
+            <!-- ================= 4. SOLAR CALCULATOR TAB ================= -->
+      <section id="tab-calculator" class="tab-content space-y-6">
+        
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <div class="flex items-center space-x-2">
+              <h2 class="text-2xl font-bold text-slate-900 tracking-tight">PM Surya Ghar & Solar ROI Calculator</h2>
+              <span class="bg-solar-100 text-solar-800 text-xs font-bold px-2.5 py-0.5 rounded-full border border-solar-300">Central + Odisha DBT</span>
+            </div>
+            <p class="text-sm text-slate-500">Calculate system size, Central + State subsidy (₹1.38L for 3kW+), 5% GST, net metering & transport.</p>
+          </div>
+          <button onclick="createQuotationFromCalc()" class="flex items-center space-x-1.5 bg-amber-500 hover:bg-amber-600 text-white px-4 py-2.5 rounded-lg text-xs font-bold shadow-md transition">
+            <i data-lucide="file-plus" class="w-4 h-4"></i>
+            <span>Create Official Quotation</span>
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          <!-- Input Controls -->
+          <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-3.5">
+            <h3 class="font-bold text-slate-800 text-base flex items-center justify-between">
+              <span class="flex items-center space-x-2">
+                <i data-lucide="sliders" class="w-4 h-4 text-solar-700"></i>
+                <span>Sizing & Financial Inputs</span>
+              </span>
+              <span class="text-[10px] text-solar-700 font-semibold bg-solar-50 px-2 py-0.5 rounded">Editable Fields</span>
+            </h3>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Average Monthly Electricity Bill (₹)</label>
+              <div class="relative">
+                <span class="absolute left-3 top-2 text-xs font-bold text-slate-400">₹</span>
+                <input type="number" id="calcBillInput" value="3000" oninput="runLiveCalculator()" class="w-full pl-7 pr-3 py-1.5 text-sm font-bold bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-solar-600 focus:bg-white">
+              </div>
+              <span class="text-[10px] text-slate-400">e.g. ₹2,500/mo = ~3 kW; ₹4,500 = ~5 kW</span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Sanctioned Load (kW)</label>
+                <input type="number" id="calcLoadInput" value="4.0" step="0.5" oninput="runLiveCalculator()" class="w-full px-3 py-1.5 text-xs font-bold bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-solar-600">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Roof Area (Sq Ft)</label>
+                <input type="number" id="calcRoofInput" value="450" oninput="runLiveCalculator()" class="w-full px-3 py-1.5 text-xs font-bold bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-solar-600">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Desired Capacity (kW)</label>
+                <input type="number" id="calcDesiredCapInput" value="3.3" step="0.1" oninput="runLiveCalculator()" placeholder="Auto" class="w-full px-3 py-1.5 text-xs font-bold text-solar-700 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-solar-600">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Daily Gen (Units/Day)</label>
+                <input type="number" id="calcUnitsDayInput" value="13.2" step="0.1" oninput="runLiveCalculator()" placeholder="13.2" class="w-full px-3 py-1.5 text-xs font-bold text-solar-700 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-solar-600">
+              </div>
+            </div>
+
+            <!-- Manual Gross Cost Input -->
+            <div class="bg-amber-50/70 p-3 rounded-lg border border-amber-200/80">
+              <div class="flex items-center justify-between mb-1">
+                <label class="block text-xs font-bold text-amber-900">Gross System Cost (₹) (Manual Input)</label>
+                <span class="text-[9px] bg-amber-200/70 text-amber-900 font-bold px-1.5 py-0.5 rounded">Custom Negotiated</span>
+              </div>
+              <div class="relative">
+                <span class="absolute left-3 top-2 text-xs font-bold text-amber-600">₹</span>
+                <input type="number" id="calcGrossCostInput" value="165000" oninput="runLiveCalculator()" placeholder="Auto-calculated if blank" class="w-full pl-7 pr-3 py-1.5 text-sm font-black text-slate-900 bg-white border border-amber-300 rounded-md focus:ring-2 focus:ring-amber-500">
+              </div>
+              <span class="text-[10px] text-amber-800 block mt-1">Vendor can manually override the base equipment & installation price.</span>
+            </div>
+
+            <!-- GST Rate -->
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Solar GST Rate (%)</label>
+                <input type="number" id="calcGstRateInput" value="5.0" step="0.1" oninput="runLiveCalculator()" class="w-full px-3 py-1.5 text-xs font-bold text-slate-800 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-solar-600">
+                <span class="text-[9px] text-slate-400">Strictly 5.0% Solar GST</span>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Subsidy Amount (₹)</label>
+                <input type="number" id="calcSubsidyInput" value="138000" step="1000" oninput="runLiveCalculator()" class="w-full px-3 py-1.5 text-xs font-bold text-amber-700 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-amber-500">
+                <span class="text-[9px] text-amber-700 font-medium">PM 78k + Odisha 60k</span>
+              </div>
+            </div>
+
+            <!-- Additional Costs without GST -->
+            <div class="p-3 bg-slate-50 rounded-lg border border-slate-200 space-y-2">
+              <span class="text-xs font-bold text-slate-700 block flex items-center justify-between">
+                <span>Additional Costs (No GST Applied)</span>
+                <span class="text-[9px] text-emerald-700 font-bold bg-emerald-100 px-1.5 py-0.5 rounded">Direct Add</span>
+              </span>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-[11px] font-semibold text-slate-600">Net Meter Cost (₹)</label>
+                  <input type="number" id="calcNetMeterCostInput" value="3500" oninput="runLiveCalculator()" class="w-full px-2.5 py-1 text-xs font-bold border border-slate-200 rounded bg-white">
+                </div>
+                <div>
+                  <label class="block text-[11px] font-semibold text-slate-600">Transportation (₹)</label>
+                  <input type="number" id="calcTransportCostInput" value="2500" oninput="runLiveCalculator()" class="w-full px-2.5 py-1 text-xs font-bold border border-slate-200 rounded bg-white">
+                </div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Category</label>
+                <select id="calcCategoryInput" onchange="runLiveCalculator()" class="w-full px-3 py-1.5 text-xs font-semibold bg-slate-50 border border-slate-200 rounded-lg">
+                  <option value="Residential">Residential</option>
+                  <option value="Commercial">Commercial</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Tariff (₹/kWh)</label>
+                <input type="number" id="calcTariffInput" value="6.5" step="0.1" oninput="runLiveCalculator()" class="w-full px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg">
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Output Metrics & PM Surya Ghar Subsidy Highlight -->
+          <div class="lg:col-span-2 space-y-6">
+            
+            <!-- Big Highlight Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              
+              <div class="bg-gradient-to-br from-solar-700 to-solar-900 text-white p-5 rounded-xl shadow-md">
+                <span class="text-xs uppercase font-semibold text-solar-200">System Capacity</span>
+                <div class="text-3xl font-black mt-1"><span id="calcResCapacity">3.3</span> kW</div>
+                <div class="text-xs text-solar-200 mt-2 flex items-center space-x-1">
+                  <i data-lucide="sun" class="w-3.5 h-3.5 text-amber-300"></i>
+                  <span><span id="calcResDailyGenDisplay">13.2</span> Units/day (~<span id="calcResPanels">6</span> Panels)</span>
+                </div>
+              </div>
+
+              <div class="bg-gradient-to-br from-amber-500 to-amber-700 text-white p-5 rounded-xl shadow-md">
+                <span class="text-xs uppercase font-semibold text-amber-100">Total Govt. Subsidy</span>
+                <div class="text-3xl font-black mt-1">₹<span id="calcResSubsidy">1,38,000</span></div>
+                <div class="text-xs text-amber-100 mt-2 flex items-center space-x-1">
+                  <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-white"></i>
+                  <span>PM Surya Ghar + Odisha Subsidy</span>
+                </div>
+              </div>
+
+              <div class="bg-gradient-to-br from-slate-800 to-slate-900 text-white p-5 rounded-xl shadow-md">
+                <span class="text-xs uppercase font-semibold text-slate-300">Net Customer Capex</span>
+                <div class="text-3xl font-black mt-1 text-emerald-400">₹<span id="calcResNetCost">41,250</span></div>
+                <div class="text-xs text-slate-300 mt-2 font-semibold">
+                  ROI Payback in <span id="calcResPayback" class="text-emerald-300 font-bold">1.3</span> Years!
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Detailed Engineering & Financial Breakdown -->
+            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+              <h3 class="font-bold text-slate-800 text-base">Comprehensive Financial & Generation Model</h3>
+              
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+                <div class="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                  <span class="text-[11px] text-slate-500 uppercase font-semibold">Daily Generation</span>
+                  <div class="text-base font-bold text-slate-800 mt-1"><span id="calcResDailyGen">13.2</span> kWh</div>
+                  <span class="text-[10px] text-slate-400"><span id="calcResMonthlyGen">396</span> units/mo</span>
+                </div>
+
+                <div class="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                  <span class="text-[11px] text-slate-500 uppercase font-semibold">Monthly Savings</span>
+                  <div class="text-base font-bold text-emerald-600 mt-1">₹<span id="calcResMonthlySave">2,574</span></div>
+                  <span class="text-[10px] text-slate-400">Net power reduction</span>
+                </div>
+
+                <div class="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                  <span class="text-[11px] text-slate-500 uppercase font-semibold">25-Yr Lifetime Savings</span>
+                  <div class="text-base font-bold text-solar-700 mt-1">₹<span id="calcResLifetimeSave">7.7</span> Lakhs</div>
+                  <span class="text-[10px] text-slate-400">Post-capex profit</span>
+                </div>
+
+                <div class="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                  <span class="text-[11px] text-slate-500 uppercase font-semibold">CO2 Offset</span>
+                  <div class="text-base font-bold text-teal-600 mt-1"><span id="calcResCO2">4.1</span> Tonnes/yr</div>
+                  <span class="text-[10px] text-slate-400">🌳 <span id="calcResTrees">98</span> trees/yr</span>
+                </div>
+              </div>
+
+              <!-- Costing Line items table -->
+              <div class="pt-2">
+                <table class="w-full text-xs text-left">
+                  <tbody class="divide-y divide-slate-100">
+                    <tr>
+                      <td class="py-2 text-slate-600">Gross Hardware & Turnkey Installation Cost (Manual/Negotiated)</td>
+                      <td class="py-2 text-right font-bold text-slate-800">₹<span id="calcResGrossCost">1,65,000</span></td>
+                    </tr>
+                    <tr>
+                      <td class="py-2 text-slate-600">Goods & Service Tax (<span id="calcResGstRate">5.0%</span> GST on Solar Equipment)</td>
+                      <td class="py-2 text-right font-bold text-slate-800">₹<span id="calcResGst">8,250</span></td>
+                    </tr>
+                    <tr>
+                      <td class="py-2 text-slate-600">Net Meter Supply & DISCOM Inspection Cost (Without GST)</td>
+                      <td class="py-2 text-right font-bold text-slate-800">₹<span id="calcResNetMeter">3,500</span></td>
+                    </tr>
+                    <tr>
+                      <td class="py-2 text-slate-600">Freight & Site Transportation Cost (Without GST)</td>
+                      <td class="py-2 text-right font-bold text-slate-800">₹<span id="calcResTransport">2,500</span></td>
+                    </tr>
+                    <tr class="bg-slate-50 font-bold">
+                      <td class="py-2 px-2 text-slate-800">Total Turnkey Project Cost (Inclusive of Taxes & Logistics)</td>
+                      <td class="py-2 px-2 text-right text-slate-900 text-sm">₹<span id="calcResTotalCost">1,79,250</span></td>
+                    </tr>
+                    <tr class="bg-amber-50 text-amber-900 font-bold">
+                      <td class="py-2 px-2">Total Subsidy Deduction (PM Surya Ghar ₹78k + Odisha State ₹60k)</td>
+                      <td class="py-2 px-2 text-right text-amber-700">- ₹<span id="calcResSubsidyDeduct">1,38,000</span></td>
+                    </tr>
+                    <tr class="bg-teal-50 text-teal-900 font-extrabold text-sm">
+                      <td class="py-2.5 px-2">Net Estimated Customer Capex Outflow</td>
+                      <td class="py-2.5 px-2 text-right text-solar-800 text-base">₹<span id="calcResNetCostFinal">41,250</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </section>
+
+            <!-- ================= 5. QUOTATIONS & PROPOSALS TAB ================= -->
+      <section id="tab-quotations" class="tab-content space-y-6">
+        
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Quotations & System Proposals</h2>
+            <p class="text-sm text-slate-500">Turnkey solar quotations (5% GST, ₹1.38L subsidy), direct WhatsApp sharing, PDF export, and 1-click project booking.</p>
+          </div>
+          <button onclick="switchTab('calculator')" class="flex items-center space-x-1.5 bg-solar-700 hover:bg-solar-800 text-white px-3.5 py-2 rounded-lg text-xs font-semibold shadow-sm transition">
+            <i data-lucide="plus" class="w-4 h-4"></i>
+            <span>+ Create Quotation</span>
+          </button>
+        </div>
+
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-50 text-slate-600 font-semibold uppercase text-[11px] border-b border-slate-200">
+                <tr>
+                  <th class="py-3 px-4">Quote No</th>
+                  <th class="py-3 px-4">Customer & DISCOM</th>
+                  <th class="py-3 px-4">Capacity & Hardware</th>
+                  <th class="py-3 px-4">Gross Cost</th>
+                  <th class="py-3 px-4">GST (5%)</th>
+                  <th class="py-3 px-4">Net Meter & Freight</th>
+                  <th class="py-3 px-4">Govt Subsidy</th>
+                  <th class="py-3 px-4">Net Capex</th>
+                  <th class="py-3 px-4">Status</th>
+                  <th class="py-3 px-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="quotationsTableBody" class="divide-y divide-slate-100">
+                <!-- Populated dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </section>
+
+            <!-- ================= 6. PROJECTS & EXECUTION TAB ================= -->
+      <section id="tab-projects" class="tab-content space-y-6">
+        
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Project Execution & Installation Tracker</h2>
+            <p class="text-sm text-slate-500">8-Stage live execution pipeline from advance token to DISCOM bi-directional net meter sync.</p>
+          </div>
+          <a href="/api/export/excel/projects" class="flex items-center space-x-1.5 bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2 rounded-lg text-xs font-semibold shadow-sm transition">
+            <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+            <span>Export Projects (.xlsx)</span>
+          </a>
+        </div>
+
+        <!-- 8-Stage Legend / Progression Bar -->
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+          <span class="text-xs font-bold text-slate-700 mb-2 block uppercase tracking-wider">Installation Milestone Stages:</span>
+          <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2 text-center text-[10px]">
+            <div class="p-2 bg-slate-100 rounded border border-slate-200 font-semibold">1. Order Confirmed</div>
+            <div class="p-2 bg-slate-100 rounded border border-slate-200 font-semibold">2. Site Survey</div>
+            <div class="p-2 bg-slate-100 rounded border border-slate-200 font-semibold">3. DISCOM App</div>
+            <div class="p-2 bg-slate-100 rounded border border-slate-200 font-semibold">4. Feasibility OK</div>
+            <div class="p-2 bg-slate-100 rounded border border-slate-200 font-semibold">5. Material Dispatch</div>
+            <div class="p-2 bg-slate-100 rounded border border-slate-200 font-semibold">6. Mounting & Wiring</div>
+            <div class="p-2 bg-slate-100 rounded border border-slate-200 font-semibold">7. Joint Inspection</div>
+            <div class="p-2 bg-emerald-100 text-emerald-800 rounded border border-emerald-300 font-bold">8. Commissioned</div>
+          </div>
+        </div>
+
+        <!-- Projects Cards / List Container -->
+        <div class="space-y-4" id="projectsListContainer">
+          <!-- Populated dynamically -->
+        </div>
+
+      </section>
+
+            <!-- ================= 7. DISCOM & NET METERING TAB ================= -->
+      <section id="tab-discom" class="tab-content space-y-6">
+        
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h2 class="text-2xl font-bold text-slate-900 tracking-tight">DISCOM & Net Metering Portal Tracker</h2>
+            <p class="text-sm text-slate-500">Track Odisha TPCODL, TPNODL, TPWODL, TPSODL & nationwide rooftop solar feasibility, meter tests and subsidy.</p>
+          </div>
+          <a href="/api/export/excel/discom" class="flex items-center space-x-1.5 bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2 rounded-lg text-xs font-semibold shadow-sm transition">
+            <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+            <span>Export DISCOM Report</span>
+          </a>
+        </div>
+
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-50 text-slate-600 font-semibold uppercase text-[11px] border-b border-slate-200">
+                <tr>
+                  <th class="py-3 px-4">Application Ref</th>
+                  <th class="py-3 px-4">Customer & Project</th>
+                  <th class="py-3 px-4">DISCOM & Division</th>
+                  <th class="py-3 px-4">Consumer No</th>
+                  <th class="py-3 px-4">Applied Capacity</th>
+                  <th class="py-3 px-4">Feasibility Status</th>
+                  <th class="py-3 px-4">Bi-Dir Meter No</th>
+                  <th class="py-3 px-4">Subsidy Status</th>
+                  <th class="py-3 px-4 text-right">Update</th>
+                </tr>
+              </thead>
+              <tbody id="discomTableBody" class="divide-y divide-slate-100">
+                <!-- Populated dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </section>
+
+            <!-- ================= 8. INVOICING & BILLING TAB ================= -->
+      <section id="tab-invoices" class="tab-content space-y-6">
+        
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Billing & Invoicing</h2>
+            <p class="text-sm text-slate-500">Distinct Proforma Invoices (PI) & Tax Invoices (TI), 5% solar equipment GST, milestone tracking, and 1-click conversion.</p>
+          </div>
+          <div class="flex items-center space-x-2">
+            <button onclick="openInvoiceModal()" class="flex items-center space-x-1.5 bg-solar-700 hover:bg-solar-800 text-white px-3.5 py-2 rounded-lg text-xs font-semibold shadow-sm transition">
+              <i data-lucide="plus" class="w-4 h-4"></i>
+              <span>+ Create Invoice</span>
+            </button>
+            <a href="/api/export/excel/invoices" class="flex items-center space-x-1.5 bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2 rounded-lg text-xs font-semibold shadow-sm transition">
+              <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+              <span>Export Invoices</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- 2 Separate Categories: Proforma Invoice & Tax Invoice -->
+        <div class="flex flex-wrap items-center justify-between gap-3 bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
+          <div class="flex items-center space-x-2">
+            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider mr-1">Categories:</span>
+            <button onclick="filterInvoicesByCategory('All')" id="invTabAll" class="inv-filter-btn px-3.5 py-1.5 text-xs font-bold rounded-lg bg-solar-700 text-white shadow-sm transition">
+              All Invoices (<span id="invCountAll">0</span>)
+            </button>
+            <button onclick="filterInvoicesByCategory('Proforma Invoice')" id="invTabProforma" class="inv-filter-btn px-3.5 py-1.5 text-xs font-bold rounded-lg bg-slate-100 text-blue-700 hover:bg-blue-50 transition border border-slate-200">
+              📄 Proforma Invoices (PI) (<span id="invCountProforma">0</span>)
+            </button>
+            <button onclick="filterInvoicesByCategory('Tax Invoice')" id="invTabTax" class="inv-filter-btn px-3.5 py-1.5 text-xs font-bold rounded-lg bg-slate-100 text-emerald-700 hover:bg-emerald-50 transition border border-slate-200">
+              🧾 GST Tax Invoices (TI) (<span id="invCountTax">0</span>)
+            </button>
+          </div>
+          <div class="text-xs text-slate-400">
+            Total Invoiced: <b id="invTotalValueText" class="text-slate-800 font-bold">₹0</b>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-50 text-slate-600 font-semibold uppercase text-[11px] border-b border-slate-200">
+                <tr>
+                  <th class="py-3 px-4">Invoice No</th>
+                  <th class="py-3 px-4">Category / Type</th>
+                  <th class="py-3 px-4">Customer & Project</th>
+                  <th class="py-3 px-4">Milestone</th>
+                  <th class="py-3 px-4">Taxable Base</th>
+                  <th class="py-3 px-4">GST (5%)</th>
+                  <th class="py-3 px-4">Net Meter & Freight</th>
+                  <th class="py-3 px-4">Total Amount</th>
+                  <th class="py-3 px-4">Paid</th>
+                  <th class="py-3 px-4">Status</th>
+                  <th class="py-3 px-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="invoicesTableBody" class="divide-y divide-slate-100">
+                <!-- Populated dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </section>
+
+            <!-- ================= 9. PAYMENTS LEDGER TAB ================= -->
+      <section id="tab-payments" class="tab-content space-y-6">
+        
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Payments & Financial Ledger</h2>
+            <p class="text-sm text-slate-500">Track Customer Collections (Payment In), Supplier Payments (Payment Out), and Project Site Expenses.</p>
+          </div>
+          <div class="flex items-center space-x-2">
+            <button onclick="openPaymentModal()" class="flex items-center space-x-1.5 bg-solar-700 hover:bg-solar-800 text-white px-3.5 py-2 rounded-lg text-xs font-semibold shadow-sm transition">
+              <i data-lucide="plus" class="w-4 h-4"></i>
+              <span>+ Record Transaction</span>
+            </button>
+            <a href="/api/export/excel/payments" class="flex items-center space-x-1.5 bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2 rounded-lg text-xs font-semibold shadow-sm transition">
+              <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+              <span>Export Ledger (.xlsx)</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- 4 Top KPI Cards for Ledger -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          
+          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+              <span class="text-xs font-semibold text-slate-500 uppercase">Total Received (In)</span>
+              <div class="text-xl font-black text-emerald-600 mt-1">₹<span id="kpiPaymentIn">0</span></div>
+              <span class="text-[10px] text-slate-400">Customer collections</span>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+              <i data-lucide="arrow-down-left" class="w-5 h-5"></i>
+            </div>
+          </div>
+
+          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+              <span class="text-xs font-semibold text-slate-500 uppercase">Total Paid Out (Vendors)</span>
+              <div class="text-xl font-black text-amber-600 mt-1">₹<span id="kpiPaymentOut">0</span></div>
+              <span class="text-[10px] text-slate-400">Panels, Inverters, Hardware</span>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+              <i data-lucide="arrow-up-right" class="w-5 h-5"></i>
+            </div>
+          </div>
+
+          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+              <span class="text-xs font-semibold text-slate-500 uppercase">Site & Logistics Expenses</span>
+              <div class="text-xl font-black text-purple-600 mt-1">₹<span id="kpiPaymentExpenses">0</span></div>
+              <span class="text-[10px] text-slate-400">Crane, Freight, DISCOM, Labor</span>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
+              <i data-lucide="truck" class="w-5 h-5"></i>
+            </div>
+          </div>
+
+          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+              <span class="text-xs font-semibold text-slate-500 uppercase">Net Cashflow / Profit</span>
+              <div class="text-xl font-black text-solar-700 mt-1">₹<span id="kpiNetCashflow">0</span></div>
+              <span class="text-[10px] text-slate-400">Net in-hand balance</span>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-solar-50 text-solar-700 flex items-center justify-center">
+              <i data-lucide="wallet" class="w-5 h-5"></i>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- 3 Transaction Type Filter Tabs -->
+        <div class="flex flex-wrap items-center justify-between gap-3 bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider mr-1">Ledger Filters:</span>
+            <button onclick="filterPaymentsByType('All')" id="payTabAll" class="pay-filter-btn px-3.5 py-1.5 text-xs font-bold rounded-lg bg-solar-700 text-white shadow-sm transition">
+              All Transactions (<span id="payCountAll">0</span>)
+            </button>
+            <button onclick="filterPaymentsByType('Payment In')" id="payTabIn" class="pay-filter-btn px-3.5 py-1.5 text-xs font-bold rounded-lg bg-slate-100 text-emerald-800 hover:bg-emerald-100 transition border border-slate-200">
+              📥 Payment In (Collections) (<span id="payCountIn">0</span>)
+            </button>
+            <button onclick="filterPaymentsByType('Payment Out')" id="payTabOut" class="pay-filter-btn px-3.5 py-1.5 text-xs font-bold rounded-lg bg-slate-100 text-amber-800 hover:bg-amber-100 transition border border-slate-200">
+              📤 Payment Out (Suppliers) (<span id="payCountOut">0</span>)
+            </button>
+            <button onclick="filterPaymentsByType('Project Expense')" id="payTabExp" class="pay-filter-btn px-3.5 py-1.5 text-xs font-bold rounded-lg bg-slate-100 text-purple-800 hover:bg-purple-100 transition border border-slate-200">
+              🏗️ Project Expenses (Site & Transport) (<span id="payCountExp">0</span>)
+            </button>
+          </div>
+          <div class="text-xs text-slate-500">
+            Showing <b id="payFilteredCountText" class="text-slate-800">0</b> records
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-50 text-slate-600 font-semibold uppercase text-[11px] border-b border-slate-200">
+                <tr>
+                  <th class="py-3 px-4">Voucher / Receipt No</th>
+                  <th class="py-3 px-4">Transaction Type</th>
+                  <th class="py-3 px-4">Party / Vendor / Customer</th>
+                  <th class="py-3 px-4">Category / Purpose</th>
+                  <th class="py-3 px-4">Project Ref</th>
+                  <th class="py-3 px-4">Amount</th>
+                  <th class="py-3 px-4">Date</th>
+                  <th class="py-3 px-4">Mode</th>
+                  <th class="py-3 px-4">Reference No</th>
+                  <th class="py-3 px-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="paymentsTableBody" class="divide-y divide-slate-100">
+                <!-- Populated dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </section>
+
+            <!-- ================= 10. REPORTS & EXPORTS TAB ================= -->
+      <section id="tab-reports" class="tab-content space-y-6">
+        
+        <div>
+          <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Reports & Business Analytics</h2>
+          <p class="text-sm text-slate-500">Export high-level operational intelligence and master multi-sheet workbooks.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          
+          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
+            <div class="w-10 h-10 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center">
+              <i data-lucide="file-spreadsheet" class="w-5 h-5"></i>
+            </div>
+            <h3 class="font-bold text-slate-800 text-base">Complete Master Workbook</h3>
+            <p class="text-xs text-slate-500">Comprehensive Excel workbook with separate sheets for Leads, Surveys, Quotations, Projects, DISCOM, and Invoices.</p>
+            <a href="/api/export/excel/master" class="inline-flex items-center space-x-1.5 bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2 rounded-lg text-xs font-semibold shadow-sm transition">
+              <i data-lucide="download" class="w-4 h-4"></i>
+              <span>Download Master Excel (.xlsx)</span>
+            </a>
+          </div>
+
+          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
+            <div class="w-10 h-10 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center">
+              <i data-lucide="users" class="w-5 h-5"></i>
+            </div>
+            <h3 class="font-bold text-slate-800 text-base">Leads & CRM Pipeline</h3>
+            <p class="text-xs text-slate-500">Lead sources, conversion ratios, customer sanctioned load, average billings, and follow-up status.</p>
+            <a href="/api/export/excel/leads" class="inline-flex items-center space-x-1.5 bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-2 rounded-lg text-xs font-semibold shadow-sm transition">
+              <i data-lucide="download" class="w-4 h-4"></i>
+              <span>Download Leads Report</span>
+            </a>
+          </div>
+
+          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
+            <div class="w-10 h-10 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center">
+              <i data-lucide="activity" class="w-5 h-5"></i>
+            </div>
+            <h3 class="font-bold text-slate-800 text-base">DISCOM & Net Metering</h3>
+            <p class="text-xs text-slate-500">Application reference numbers, TPCODL/TPNODL/TPWODL status, bi-directional meter installations, and subsidy claims.</p>
+            <a href="/api/export/excel/discom" class="inline-flex items-center space-x-1.5 bg-purple-600 hover:bg-purple-700 text-white px-3.5 py-2 rounded-lg text-xs font-semibold shadow-sm transition">
+              <i data-lucide="download" class="w-4 h-4"></i>
+              <span>Download DISCOM Report</span>
+            </a>
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- ================= 11. SOFTWARE UPDATES TAB ================= -->
+      <section id="tab-updates" class="tab-content space-y-6">
+        
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <div class="flex items-center space-x-2">
+              <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Software Updates & Cloud Sync</h2>
+              <span class="bg-solar-100 text-solar-800 text-xs font-bold px-2.5 py-0.5 rounded-full border border-solar-300">GitHub Auto-Deployment</span>
+            </div>
+            <p class="text-sm text-slate-500">Professional 1-click in-app background download and automatic installation. Zero third-party redirects or complex manual steps.</p>
+          </div>
+          <button onclick="checkUpdates(true)" id="btnManualCheck" class="flex items-center space-x-1.5 bg-solar-700 hover:bg-solar-800 text-white px-4 py-2.5 rounded-lg text-xs font-bold shadow-sm transition">
+            <i data-lucide="refresh-cw" id="checkSpinnerIcon" class="w-4 h-4"></i>
+            <span>Check for Updates</span>
+          </button>
+        </div>
+
+        <!-- System Version & Channel Overview Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          
+          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+            <span class="text-xs font-semibold text-slate-400 uppercase">Installed Version</span>
+            <div class="text-2xl font-black text-slate-900 mt-1">v<span id="currentVerDisplay">2.0.0</span></div>
+            <span class="text-[10px] text-slate-500">Build: 27 Nov 2026</span>
+          </div>
+
+          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+            <span class="text-xs font-semibold text-slate-400 uppercase">Cloud Connection</span>
+            <div class="text-base font-bold text-emerald-600 mt-1 flex items-center space-x-1.5">
+              <i data-lucide="cloud" class="w-4 h-4 text-emerald-600"></i>
+              <span id="cloudStatusText">GitHub Connected</span>
+            </div>
+            <span class="text-[10px] text-slate-400 truncate block">beyondexcelsolution-web/Projects</span>
+          </div>
+
+          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+            <span class="text-xs font-semibold text-slate-400 uppercase">Release Channel</span>
+            <div class="text-base font-bold text-slate-800 mt-1 flex items-center space-x-1.5">
+              <i data-lucide="shield-check" class="w-4 h-4 text-solar-700"></i>
+              <span>Production Stable</span>
+            </div>
+            <span class="text-[10px] text-slate-400">Signed Official Packages</span>
+          </div>
+
+          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+            <span class="text-xs font-semibold text-slate-400 uppercase">Last Checked</span>
+            <div class="text-sm font-bold text-slate-700 mt-1" id="lastCheckedTime">Just now</div>
+            <span class="text-[10px] text-emerald-600 font-semibold" id="autoCheckStatus">Auto-check on startup: Active</span>
+          </div>
+
+        </div>
+
+        <!-- State 1: Up-to-Date Screen -->
+        <div id="upToDateCard" class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm text-center max-w-2xl mx-auto space-y-4">
+          <div class="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-2xl mx-auto flex items-center justify-center shadow-inner">
+            <i data-lucide="check-circle" class="w-9 h-9"></i>
+          </div>
+          <div>
+            <h3 class="text-xl font-bold text-slate-900">Your SolarPulse ERP is Completely Up-to-Date!</h3>
+            <p class="text-xs text-slate-500 mt-1">Aapke system me latest version installed hai. Saare Odisha DISCOM rules, PM Surya Ghar ₹1,38,000 subsidy calculations, aur 5% GST updates active hain.</p>
+          </div>
+          <div class="inline-flex items-center space-x-2 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200 text-xs text-slate-600">
+            <i data-lucide="git-branch" class="w-3.5 h-3.5 text-solar-700"></i>
+            <span>Current Release: <b>v2.0.0 (Production)</b></span>
+          </div>
+        </div>
+
+        <!-- State 2: Update Available Card -->
+        <div id="updateAvailableCard" class="hidden bg-gradient-to-br from-slate-900 via-slate-900 to-solar-950 text-white p-6 sm:p-8 rounded-2xl border border-solar-500/40 shadow-2xl space-y-6 relative overflow-hidden">
+          
+          <!-- Background Glow -->
+          <div class="absolute -top-24 -right-24 w-60 h-60 bg-emerald-500/20 rounded-full blur-3xl pointer-events-none"></div>
+
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div class="space-y-1">
+              <span class="bg-amber-400/20 text-amber-300 text-xs font-bold px-3 py-1 rounded-full border border-amber-400/30 uppercase tracking-wider">
+                🚀 New Release Ready
+              </span>
+              <h3 class="text-2xl font-black text-white mt-2">
+                SolarPulse ERP <span id="latestVerDisplay">v2.1.0</span> Available
+              </h3>
+              <p class="text-xs text-slate-400">Release Date: <b id="releaseDateDisplay" class="text-slate-200">27 Nov 2026</b> • Architecture: <b>x64 Windows Desktop</b></p>
+            </div>
+            
+            <button onclick="startAutoUpdate()" id="btnStartUpdate" class="flex items-center space-x-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black px-6 py-3 rounded-xl shadow-lg shadow-amber-500/20 transition transform hover:-translate-y-0.5 text-sm">
+              <i data-lucide="download" class="w-4 h-4"></i>
+              <span>Download & Install Update</span>
+            </button>
+          </div>
+
+          <!-- Changelog / Release Notes -->
+          <div class="bg-slate-800/80 border border-slate-700/80 rounded-xl p-5 space-y-2">
+            <h4 class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center space-x-1.5">
+              <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+              <span>What's New in this Release:</span>
+            </h4>
+            <ul id="releaseNotesList" class="space-y-1.5 text-xs text-slate-300 list-disc list-inside">
+              <!-- Populated dynamically -->
+            </ul>
+          </div>
+
+          <!-- Real-Time Download Progress Container -->
+          <div id="downloadProgressBox" class="hidden bg-slate-800/90 border border-slate-700 rounded-xl p-5 space-y-3">
+            <div class="flex items-center justify-between text-xs">
+              <span class="font-bold text-white flex items-center space-x-2">
+                <i data-lucide="arrow-down-circle" class="w-4 h-4 text-emerald-400 animate-bounce"></i>
+                <span id="downloadStatusLabel">Downloading update package from GitHub...</span>
+              </span>
+              <span class="font-mono font-bold text-emerald-400"><span id="downloadPctText">0%</span></span>
+            </div>
+
+            <!-- Progress Track -->
+            <div class="w-full bg-slate-900 h-3 rounded-full overflow-hidden p-0.5 border border-slate-700">
+              <div id="downloadProgressBar" class="bg-gradient-to-r from-emerald-500 to-teal-400 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+
+            <div class="flex items-center justify-between text-[11px] text-slate-400 font-mono">
+              <span>Downloaded: <b id="downloadMbText" class="text-slate-200">0 MB</b> / <b id="downloadTotalMbText" class="text-slate-200">85 MB</b></span>
+              <span>Speed: <b id="downloadSpeedText" class="text-slate-200">-- MB/s</b></span>
+            </div>
+          </div>
+
+          <!-- Ready To Install Card -->
+          <div id="readyToInstallBox" class="hidden bg-emerald-950/80 border border-emerald-500/40 rounded-xl p-5 space-y-3">
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 bg-emerald-500 text-slate-950 rounded-xl flex items-center justify-center shadow-md">
+                <i data-lucide="check" class="w-6 h-6"></i>
+              </div>
+              <div>
+                <h4 class="font-bold text-emerald-200 text-base">Update Download Complete!</h4>
+                <p class="text-xs text-emerald-300/80">Package verified. Click below to install. The application will close, update, and restart automatically.</p>
+              </div>
+            </div>
+
+            <div class="flex items-center space-x-3 pt-2">
+              <button onclick="executeInstall(true)" class="flex items-center space-x-2 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black px-5 py-2.5 rounded-lg text-xs shadow-md transition">
+                <i data-lucide="zap" class="w-4 h-4"></i>
+                <span>⚡ Express Update (Auto-Restart)</span>
+              </button>
+              <button onclick="executeInstall(false)" class="flex items-center space-x-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold px-4 py-2.5 rounded-lg text-xs border border-slate-600 transition">
+                <i data-lucide="external-link" class="w-4 h-4"></i>
+                <span>Standard Setup Wizard</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Developer Push Workflow Guide -->
+        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+          <div class="flex items-center space-x-2">
+            <div class="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-700">
+              <i data-lucide="terminal" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <h3 class="font-bold text-slate-800 text-base">Developer Push-to-Update Architecture</h3>
+              <p class="text-xs text-slate-500">Aap yaha bethe code push karenge aur user ke PC me aise update deliver hoga:</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+            <div class="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-2">
+              <div class="font-bold text-slate-800 flex items-center space-x-1.5">
+                <span class="w-5 h-5 rounded-full bg-solar-700 text-white text-[10px] flex items-center justify-center">1</span>
+                <span>Code Modify & Build</span>
+              </div>
+              <p class="text-slate-500">Apne project me changes karein aur <code>python build_exe.py</code> aur Inno Setup se naya installer build karein.</p>
+            </div>
+
+            <div class="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-2">
+              <div class="font-bold text-slate-800 flex items-center space-x-1.5">
+                <span class="w-5 h-5 rounded-full bg-solar-700 text-white text-[10px] flex items-center justify-center">2</span>
+                <span>Update version.json & Push</span>
+              </div>
+              <p class="text-slate-500"><code>version.json</code> me naya version number (e.g. 2.1.0) aur release notes daal kar GitHub repo me push karein.</p>
+            </div>
+
+            <div class="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-2">
+              <div class="font-bold text-slate-800 flex items-center space-x-1.5">
+                <span class="w-5 h-5 rounded-full bg-solar-700 text-white text-[10px] flex items-center justify-center">3</span>
+                <span>Client 1-Click Express Update</span>
+              </div>
+              <p class="text-slate-500">User ka app automatically update detect karega. User sirf "Install Update" dabayega aur bina browser khole software update ho jayega.</p>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ================= MODALS ================= -->
+
+  <!-- 1. ADD / EDIT LEAD MODAL -->
+  <div id="leadModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-200 mb-4">
+        <h3 class="font-bold text-slate-800 text-lg flex items-center space-x-2">
+          <i data-lucide="user-plus" class="w-5 h-5 text-solar-700"></i>
+          <span>New Customer Lead</span>
+        </h3>
+        <button onclick="closeModal('leadModal')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <form id="leadForm" onsubmit="handleLeadSubmit(event)" class="space-y-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Customer Full Name *</label>
+            <input type="text" id="leadName" required placeholder="e.g. Subrat Jena" class="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg focus:ring-2 focus:ring-solar-600">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Phone Number *</label>
+            <input type="text" id="leadPhone" required placeholder="+91 90000 00001" class="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg focus:ring-2 focus:ring-solar-600">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Email Address</label>
+            <input type="email" id="leadEmail" placeholder="customer@gmail.com" class="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg focus:ring-2 focus:ring-solar-600">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Electricity Consumer No *</label>
+            <input type="text" id="leadConsumerNo" required placeholder="e.g. 01A2345678" class="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg focus:ring-2 focus:ring-solar-600">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">State</label>
+            <input type="text" id="leadState" value="Odisha" class="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">City</label>
+            <input type="text" id="leadCity" value="Bhubaneswar" class="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">DISCOM</label>
+            <select id="leadDiscom" class="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg font-semibold text-slate-700">
+              <option value="TPCODL">TPCODL (Central)</option>
+              <option value="TPNODL">TPNODL (Northern)</option>
+              <option value="TPWODL">TPWODL (Western)</option>
+              <option value="TPSODL">TPSODL (Southern)</option>
+              <option value="Other">Other / National</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Site / Roof Address</label>
+          <textarea id="leadAddress" required rows="2" placeholder="Plot No, Street, Landmark..." class="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg"></textarea>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Monthly Bill (₹)</label>
+            <input type="number" id="leadBill" value="4500" class="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Sanctioned Load (kW)</label>
+            <input type="number" id="leadLoad" value="5" step="0.5" class="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Proposed kW</label>
+            <input type="number" id="leadProposedKw" value="5" step="0.5" class="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg font-bold text-solar-700">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Notes / Specific Requirements</label>
+          <input type="text" id="leadNotes" placeholder="e.g. Interested in TopCon bifacial with PM Surya Ghar subsidy." class="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg">
+        </div>
+
+        <div class="pt-4 border-t border-slate-200 flex justify-end space-x-2">
+          <button type="button" onclick="closeModal('leadModal')" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button>
+          <button type="submit" class="px-4 py-2 text-xs font-bold text-white bg-solar-700 hover:bg-solar-800 rounded-lg shadow-sm">Save Lead</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 2. SITE SURVEY MODAL -->
+  <div id="surveyModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-200 mb-4">
+        <h3 class="font-bold text-slate-800 text-lg flex items-center space-x-2">
+          <i data-lucide="compass" class="w-5 h-5 text-solar-700"></i>
+          <span>Record Technical Site Survey</span>
+        </h3>
+        <button onclick="closeModal('surveyModal')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <form id="surveyForm" onsubmit="handleSurveySubmit(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Select Customer Lead *</label>
+          <select id="surveyLeadId" required class="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg font-semibold text-slate-700">
+            <!-- Populated dynamically -->
+          </select>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Surveyor Engineer Name</label>
+            <input type="text" id="surveyorName" value="Soumya Ranjan" class="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Roof Type</label>
+            <select id="surveyRoofType" class="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg">
+              <option value="RCC Flat">RCC Flat Terrace</option>
+              <option value="Elevated Pergola">Elevated Pergola / High-Rise (7ft+)</option>
+              <option value="Metal Sheet">Industrial Metal Sheet Shed</option>
+              <option value="Tiled/Sloped">Tiled / Sloped Roof</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Total Available Roof Area (sq ft)</label>
+            <input type="number" id="surveyTotalArea" value="650" class="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Shadow-Free Area (sq ft)</label>
+            <input type="number" id="surveyShadowFree" value="580" class="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Feasible kW</label>
+            <input type="number" id="surveyRecommendedKw" value="5.0" step="0.5" class="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg font-bold text-solar-700">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">DC Cable Distance (m)</label>
+            <input type="number" id="surveyDcDist" value="25" class="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">AC Cable Distance (m)</label>
+            <input type="number" id="surveyAcDist" value="15" class="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Feasibility Status</label>
+          <select id="surveyStatus" class="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg font-bold text-emerald-700">
+            <option value="Feasible">Feasible (Ready for Installation)</option>
+            <option value="Feasible with modifications">Feasible with modifications (Elevated Structure needed)</option>
+            <option value="Not Feasible">Not Feasible (Severe shading/weak roof)</option>
+          </select>
+        </div>
+
+        <div class="pt-4 border-t border-slate-200 flex justify-end space-x-2">
+          <button type="button" onclick="closeModal('surveyModal')" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button>
+          <button type="submit" class="px-4 py-2 text-xs font-bold text-white bg-solar-700 hover:bg-solar-800 rounded-lg shadow-sm">Save Survey</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 3. VENDOR SETTINGS / WHITE-LABEL MODAL -->
+  <div id="settingsModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-200 mb-4">
+        <div>
+          <h3 class="font-bold text-slate-800 text-lg flex items-center space-x-2">
+            <i data-lucide="settings" class="w-5 h-5 text-solar-700"></i>
+            <span>Vendor Profile & White-Label Demo</span>
+          </h3>
+          <p class="text-xs text-slate-500">Configure your solar company details. Used on Quotations & Invoices.</p>
+        </div>
+        <button onclick="closeModal('settingsModal')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <form id="settingsForm" onsubmit="handleSettingsSubmit(event)" class="space-y-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Company / Vendor Name *</label>
+            <input type="text" id="setCompanyName" required class="w-full px-3 py-1.5 text-xs font-bold border border-slate-200 rounded-lg">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Tagline</label>
+            <input type="text" id="setTagline" class="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Official Phone</label>
+            <input type="text" id="setPhone" class="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Official Email</label>
+            <input type="email" id="setEmail" class="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Office / Workshop Address</label>
+          <textarea id="setAddress" rows="2" class="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg"></textarea>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">GSTIN Number</label>
+            <input type="text" id="setGstin" class="w-full px-3 py-1.5 text-xs font-mono border border-slate-200 rounded-lg">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">PAN Number</label>
+            <input type="text" id="setPan" class="w-full px-3 py-1.5 text-xs font-mono border border-slate-200 rounded-lg">
+          </div>
+        </div>
+
+        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+          <span class="text-xs font-bold text-slate-700 block">Bank Details for Customer Payments</span>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600">Bank Name</label>
+              <input type="text" id="setBankName" class="w-full px-2.5 py-1 text-xs border border-slate-200 rounded">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600">Account Number</label>
+              <input type="text" id="setAccountNo" class="w-full px-2.5 py-1 text-xs font-mono border border-slate-200 rounded">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600">IFSC Code</label>
+              <input type="text" id="setIfsc" class="w-full px-2.5 py-1 text-xs font-mono border border-slate-200 rounded">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600">UPI ID / VPA</label>
+              <input type="text" id="setUpi" class="w-full px-2.5 py-1 text-xs border border-slate-200 rounded">
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-4 border-t border-slate-200 flex justify-end space-x-2">
+          <button type="button" onclick="closeModal('settingsModal')" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button>
+          <button type="submit" class="px-4 py-2 text-xs font-bold text-white bg-solar-700 hover:bg-solar-800 rounded-lg shadow-sm">Save Profile</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 4. RECORD PAYMENT / TRANSACTION MODAL -->
+  <div id="paymentModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-200 mb-4">
+        <div>
+          <h3 class="font-bold text-slate-800 text-lg flex items-center space-x-2">
+            <i data-lucide="wallet" class="w-5 h-5 text-solar-700"></i>
+            <span>Record Ledger Transaction</span>
+          </h3>
+          <p class="text-xs text-slate-500">Record customer collections, supplier vendor payments, or site expenses.</p>
+        </div>
+        <button onclick="closeModal('paymentModal')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <form id="paymentForm" onsubmit="handlePaymentSubmit(event)" class="space-y-3.5">
+        
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Transaction Type *</label>
+          <select id="payTransType" onchange="togglePaymentTypeFields(this.value)" class="w-full px-3 py-2 text-xs font-bold border border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:ring-2 focus:ring-solar-600">
+            <option value="Payment In">📥 Payment In (Customer Collection)</option>
+            <option value="Payment Out">📤 Payment Out (Vendor / Supplier Payment)</option>
+            <option value="Project Expense">🏗️ Project Expense (Site Logistics & Local Costs)</option>
+          </select>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label id="lblPartyName" class="block text-xs font-semibold text-slate-600 mb-1">Party / Customer / Vendor Name *</label>
+            <input type="text" id="payPartyName" required placeholder="e.g. Waaree Energies / Subrat Jena" class="w-full px-3 py-1.5 text-xs font-semibold border border-slate-200 rounded-lg">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Category / Expense Head *</label>
+            <select id="payCategory" class="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg font-semibold">
+              <option value="Customer Advance">Customer Advance (15%)</option>
+              <option value="Material Dispatch Stage">Material Dispatch Payment (70%)</option>
+              <option value="Final Settlement">Final Commissioning Settlement (15%)</option>
+              <option value="Solar Panels">Solar PV Panels (Waaree/Adani/Tata)</option>
+              <option value="Solar Inverter">Inverter (Growatt/Sungrow/Havells)</option>
+              <option value="Mounting Structure">HDG Structure & Hardware</option>
+              <option value="Net Meter Cost">Net Meter Supply & DISCOM Fee</option>
+              <option value="Transportation & Freight">Freight, Crane & Logistics</option>
+              <option value="Installation Labor">Installation & Electrical Labor</option>
+              <option value="Misc Site Expense">Miscellaneous Site Expense</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Linked Project (Optional)</label>
+            <select id="payProjectId" class="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg font-semibold text-slate-700">
+              <option value="">-- General / Non-Project --</option>
+              <!-- Populated dynamically -->
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Amount (₹) *</label>
+            <div class="relative">
+              <span class="absolute left-3 top-1.5 text-xs font-bold text-slate-400">₹</span>
+              <input type="number" id="payAmount" required step="1" placeholder="e.g. 25000" class="w-full pl-7 pr-3 py-1.5 text-sm font-bold border border-slate-200 rounded-lg focus:ring-2 focus:ring-solar-600">
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Payment Mode</label>
+            <select id="payMode" class="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg font-medium">
+              <option value="UPI">UPI / QR Code</option>
+              <option value="NEFT/RTGS">NEFT / RTGS</option>
+              <option value="Cheque">Bank Cheque</option>
+              <option value="Cash">Cash</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Payment Date</label>
+            <input type="date" id="payDate" class="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg font-medium">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Transaction Ref / Cheque No</label>
+            <input type="text" id="payRefNo" placeholder="e.g. UPI/4291882910 or CHQ-9912" class="w-full px-3 py-1.5 text-xs font-mono border border-slate-200 rounded-lg">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Remarks / Note</label>
+            <input type="text" id="payRemarks" placeholder="e.g. 50% advance for 10 panels Waaree" class="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg">
+          </div>
+        </div>
+
+        <div class="pt-4 border-t border-slate-200 flex justify-end space-x-2">
+          <button type="button" onclick="closeModal('paymentModal')" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button>
+          <button type="submit" class="px-4 py-2 text-xs font-bold text-white bg-solar-700 hover:bg-solar-800 rounded-lg shadow-sm">Record Transaction</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 5. CREATE INVOICE MODAL (PROFORMA OR TAX INVOICE) -->
+  <div id="invoiceModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-200 mb-4">
+        <div>
+          <h3 class="font-bold text-slate-800 text-lg flex items-center space-x-2">
+            <i data-lucide="file-text" class="w-5 h-5 text-solar-700"></i>
+            <span>Create Invoice (Proforma / Tax)</span>
+          </h3>
+          <p class="text-xs text-slate-500">Generate Proforma Invoice (PI) or Official GST Tax Invoice (TI).</p>
+        </div>
+        <button onclick="closeModal('invoiceModal')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <form id="invoiceForm" onsubmit="handleInvoiceSubmit(event)" class="space-y-3.5">
+        
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Invoice Category / Type *</label>
+          <select id="invTypeSelect" class="w-full px-3 py-2 text-xs font-bold border border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:ring-2 focus:ring-solar-600">
+            <option value="Proforma Invoice">📄 Proforma Invoice (Commercial / Advance Quotation Estimate)</option>
+            <option value="Tax Invoice">🧾 GST Tax Invoice (Official Tax Document with HSN 8461)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Select Project / Customer *</label>
+          <select id="invProjectId" required onchange="onInvoiceProjectSelect(this.value)" class="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg font-semibold text-slate-700">
+            <!-- Populated dynamically -->
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Milestone Name *</label>
+          <input type="text" id="invMilestone" required placeholder="e.g. Advance Booking (15%) or Material Dispatch (70%)" class="w-full px-3 py-1.5 text-xs font-semibold border border-slate-200 rounded-lg">
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Taxable Base Amount (₹) *</label>
+            <input type="number" id="invBaseAmount" required step="1" oninput="recalcInvoiceModalTotals()" placeholder="e.g. 50000" class="w-full px-3 py-1.5 text-xs font-bold border border-slate-200 rounded-lg">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">GST Rate (%)</label>
+            <input type="number" id="invGstRate" value="5.0" step="0.1" oninput="recalcInvoiceModalTotals()" class="w-full px-3 py-1.5 text-xs font-bold border border-slate-200 rounded-lg">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Net Meter Cost (₹) (No GST)</label>
+            <input type="number" id="invNetMeterCost" value="0" step="1" oninput="recalcInvoiceModalTotals()" class="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Transportation Cost (₹) (No GST)</label>
+            <input type="number" id="invTransportCost" value="0" step="1" oninput="recalcInvoiceModalTotals()" class="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg">
+          </div>
+        </div>
+
+        <div class="p-3 bg-slate-50 rounded-lg border border-slate-200 flex items-center justify-between">
+          <span class="text-xs font-bold text-slate-700">Calculated Total Invoice Amount:</span>
+          <span class="text-base font-black text-solar-700">₹<span id="invModalTotalDisplay">0</span></span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Invoice Date</label>
+            <input type="date" id="invDate" class="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Due Date</label>
+            <input type="date" id="invDueDate" class="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Notes / Terms</label>
+          <input type="text" id="invNotes" placeholder="e.g. Payment due within 7 working days" class="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg">
+        </div>
+
+        <div class="pt-4 border-t border-slate-200 flex justify-end space-x-2">
+          <button type="button" onclick="closeModal('invoiceModal')" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button>
+          <button type="submit" class="px-4 py-2 text-xs font-bold text-white bg-solar-700 hover:bg-solar-800 rounded-lg shadow-sm">Generate Invoice</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toastNotification" class="fixed bottom-6 right-6 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl z-50 flex items-center space-x-3 transition transform translate-y-20 opacity-0 pointer-events-none">
+    <div id="toastIcon" class="text-emerald-400"><i data-lucide="check-circle" class="w-5 h-5"></i></div>
+    <span id="toastMsg" class="text-xs font-medium">Notification message</span>
+  </div>
+
+  <!-- Main JavaScript bundle -->
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
