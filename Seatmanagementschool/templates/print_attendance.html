@@ -142,8 +142,9 @@
         </div>
     </div>
 
-    {% for r in data.rooms_summary %}
-        {% if r.all_students | length > 0 %}
+    {% set active_rooms = data.rooms_summary | selectattr('total_seated', 'gt', 0) | list %}
+    {% for r in active_rooms %}
+        {% for page in r.attendance_pages %}
         <div class="page page-break">
             <table class="att-table">
                 <thead>
@@ -154,7 +155,7 @@
                                 {{ data.settings.get('exam_title', 'Periodic Assessment – 2') }} ATTENDANCE SHEET {{ data.settings.get('academic_year', '2026-27') }}
                             </div>
                             <div class="room-meta">
-                                <span>EXAMINATION ROOM: <strong>ROOM {{ r.name }}</strong> ({{ r.block }})</span>
+                                <span>EXAMINATION ROOM: <strong>ROOM {{ r.name }}</strong> ({{ r.block }}){% if page.total_pages > 1 %} <span style="font-size: 8.5pt; font-weight: normal; color: #475569;">(Page {{ page.page_num }} of {{ page.total_pages }})</span>{% endif %}</span>
                                 <span>TOTAL CANDIDATES: <strong>{{ r.all_students | length }}</strong></span>
                             </div>
                             <!-- Full-width straight divider line -->
@@ -177,9 +178,9 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for st in r.all_students %}
+                    {% for st in page.students %}
                     <tr>
-                        <td class="text-center">{{ loop.index }}</td>
+                        <td class="text-center">{{ page.start_sno + loop.index0 }}</td>
                         <td class="text-center font-bold">{{ st.adm_no }}</td>
                         <td class="text-left font-bold" style="padding-left: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px;">{{ st.name }}</td>
                         <td class="text-center">{{ st.seating_group or st.class_name }}</td>
@@ -189,6 +190,7 @@
                     </tr>
                     {% endfor %}
                 </tbody>
+                {% if page.is_last_page %}
                 <tfoot>
                     <tr style="background: #F8FAFC;">
                         <td colspan="2" class="text-center font-bold"></td>
@@ -220,9 +222,17 @@
                         {% endfor %}
                     </tr>
                 </tfoot>
+                {% endif %}
             </table>
         </div>
-        {% endif %}
+        {% endfor %}
+    {% else %}
+        <div class="page">
+            <div style="text-align: center; padding: 50px 20px; color: #64748B;">
+                <h2>No Attendance Sheets Found</h2>
+                <p>Please enter arrangements in the Arrangement page to view and print attendance sheets.</p>
+            </div>
+        </div>
     {% endfor %}
 </body>
 </html>

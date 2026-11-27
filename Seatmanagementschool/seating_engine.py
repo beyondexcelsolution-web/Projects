@@ -208,8 +208,36 @@ def get_seating_plan_data():
             right_grp_map[st['seating_group'] or st['class_name']].append(st['roll_in_group'] or st['roll_in_class'])
         right_txt = " // ".join([f"{c}: {min(rolls)}-{max(rolls)} ({len(rolls)})" for c, rolls in right_grp_map.items()])
 
-        # Sort all students alphabetically by candidate name (Name-wise order)
-        all_std_sorted = sorted(alloc['all_students'], key=lambda s: (s.get('name') or '').strip().upper())
+        # Room-aligned order: Left row students first in roll order, then Right row students in roll order
+        room_aligned_students = list(alloc['left_students']) + list(alloc['right_students'])
+        if not room_aligned_students and alloc['all_students']:
+            room_aligned_students = list(alloc['all_students'])
+
+        # Pre-chunk into print-ready A4 pages to ensure header repeats on every printed page
+        notice_chunk_size = 24
+        notice_chunks = [room_aligned_students[i:i + notice_chunk_size] for i in range(0, len(room_aligned_students), notice_chunk_size)] or [[]]
+        notice_pages = []
+        tot_notice_pages = len(notice_chunks)
+        for p_i, ch in enumerate(notice_chunks):
+            notice_pages.append({
+                'page_num': p_i + 1,
+                'total_pages': tot_notice_pages,
+                'students': ch,
+                'start_sno': p_i * notice_chunk_size + 1
+            })
+
+        att_chunk_size = 22
+        att_chunks = [room_aligned_students[i:i + att_chunk_size] for i in range(0, len(room_aligned_students), att_chunk_size)] or [[]]
+        att_pages = []
+        tot_att_pages = len(att_chunks)
+        for p_i, ch in enumerate(att_chunks):
+            att_pages.append({
+                'page_num': p_i + 1,
+                'total_pages': tot_att_pages,
+                'students': ch,
+                'start_sno': p_i * att_chunk_size + 1,
+                'is_last_page': (p_i == tot_att_pages - 1)
+            })
 
         summary_item = {
             'id': rm.get('id', 0),
@@ -229,8 +257,10 @@ def get_seating_plan_data():
             'free_seats': max(0, cap - tot_cnt),
             'left_students': alloc['left_students'],
             'right_students': alloc['right_students'],
-            'all_students': all_std_sorted,
-            'name_sorted_students': all_std_sorted,
+            'all_students': room_aligned_students,
+            'name_sorted_students': room_aligned_students,
+            'notice_pages': notice_pages,
+            'attendance_pages': att_pages,
             'is_over_capacity': is_over,
             'status': 'OK' if not is_over else f'OVER ({tot_cnt}/{cap})'
         }
@@ -239,19 +269,16 @@ def get_seating_plan_data():
             rooms_over_capacity.append(summary_item)
 
     # 7. Build Class Plan (Class by class view)
-    class_order_setting = settings.get('class_print_order', 'Section first')
     distinct_classes = sorted(list(class_students_list.keys()))
 
     def class_sort_key(cname):
-        parts = cname.split()
-        gr = parts[0]
+        parts = str(cname).strip().split()
+        gr = parts[0] if parts else '99'
         sec = parts[1] if len(parts) > 1 else ''
         try:
             gr_num = int(gr)
         except ValueError:
             gr_num = 99
-        if class_order_setting == 'Section first':
-            return (sec, gr_num)
         return (gr_num, sec)
 
     ordered_classes = sorted(distinct_classes, key=class_sort_key)
@@ -274,27 +301,45 @@ def get_seating_plan_data():
 
         for st in c_students:
             adm = st['adm_no']
-            allot = student_allotment.get(adm, {})
-            room_allotted = allot.get('room_name', 'NOT ALLOTTED')
-            c_plan_students.append({
-                'adm_no': adm,
-                'name': st['name'],
-                'gender': st.get('gender', 'M'),
-                'roll_no': st.get('roll_in_class') or 0,
-                'roll_in_class': st.get('roll_in_class') or 0,
-                'roll_in_group': st.get('roll_in_group') or 0,
-                'room_allotted': room_allotted,
-                'allotted_room': room_allotted,
-                'row_side': allot.get('row_side', '')
+            allot = student_allotment.get(adm)
+            # Only include students who are actually allotted to a room
+            if allot and allot.get('room_name') and allot.get('room_name') != 'NOT ALLOTTED':
+                room_allotted = allot['room_name']
+                c_plan_students.append({
+                    'adm_no': adm,
+                    'name': st['name'],
+                    'gender': st.get('gender', 'M'),
+                    'roll_no': st.get('roll_in_class') or 0,
+                    'roll_in_class': st.get('roll_in_class') or 0,
+                    'roll_in_group': st.get('roll_in_group') or 0,
+                    'room_allotted': room_allotted,
+                    'allotted_room': room_allotted,
+                    'row_side': allot.get('row_side', '')
+                })
+
+        # Only include classes that have at least one allotted student!
+        if c_plan_students:
+            plan_chunk_size = 24
+            plan_chunks = [c_plan_students[i:i + plan_chunk_size] for i in range(0, len(c_plan_students), plan_chunk_size)] or [[]]
+            plan_pages = []
+            tot_plan_pages = len(plan_chunks)
+            for p_i, ch in enumerate(plan_chunks):
+                plan_pages.append({
+                    'page_num': p_i + 1,
+                    'total_pages': tot_plan_pages,
+                    'students': ch,
+                    'start_sno': p_i * plan_chunk_size + 1
+                })
+
+            classes_plan_data.append({
+                'class_name': cls,
+                'display_name': to_roman_class(cls),
+                'students': c_plan_students,
+                'total_students': len(c_plan_students),
+                'total_strength': len(c_plan_students),
+                'allotments': allotments_for_class,
+                'plan_pages': plan_pages
             })
-        classes_plan_data.append({
-            'class_name': cls,
-            'display_name': to_roman_class(cls),
-            'students': c_plan_students,
-            'total_students': len(c_plan_students),
-            'total_strength': len(c_plan_students),
-            'allotments': allotments_for_class
-        })
 
     # 8. Compute System Integrity Checks
     unseated_students = [s for s in student_rows if s['adm_no'] not in student_allotment]

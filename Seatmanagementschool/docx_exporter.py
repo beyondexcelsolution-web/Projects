@@ -311,144 +311,158 @@ def generate_attendance_sheet_docx(output_path):
         sec.left_margin = Inches(0.4)
         sec.right_margin = Inches(0.4)
 
-    for idx, rm in enumerate(rooms_summary):
+    CHUNK_SIZE = 22
+    is_first_page = True
+
+    for rm in rooms_summary:
         if rm['total_seated'] == 0:
             continue
-        if idx > 0:
-            doc.add_page_break()
-
-        add_header_banner(doc, banner_type='wide')
-
-        p_t = doc.add_paragraph()
-        p_t.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        p_t.paragraph_format.space_before = Pt(2)
-        p_t.paragraph_format.space_after = Pt(1)
-        r_t = p_t.add_run(f"{exam_title} ({acad_year})\nAttendance sheet")
-        r_t.font.name = 'Times New Roman'
-        r_t.font.size = Pt(12)
-        r_t.font.bold = True
-
-        p_r = doc.add_paragraph()
-        p_r.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        p_r.paragraph_format.space_before = Pt(1)
-        p_r.paragraph_format.space_after = Pt(4)
-        r_rn = p_r.add_run(f"ROOM NAME : {rm['name']}")
-        r_rn.font.name = 'Times New Roman'
-        r_rn.font.size = Pt(11)
-        r_rn.font.bold = True
-
-        add_horizontal_straight_line(doc)
 
         students = rm['all_students']
-        num_date_cols = len(attendance_dates) or 8
-        total_cols = 4 + num_date_cols
+        chunks = [students[i:i + CHUNK_SIZE] for i in range(0, len(students), CHUNK_SIZE)] or [[]]
 
-        table = doc.add_table(rows=len(students) + 6, cols=total_cols)
-        table.alignment = WD_TABLE_ALIGNMENT.CENTER
-        table.autofit = False
-        make_table_header_repeat(table, 2)
+        for p_idx, chunk in enumerate(chunks):
+            if not is_first_page:
+                doc.add_page_break()
+            is_first_page = False
 
-        # Row 0: Dates
-        hdr0 = table.rows[0]
-        hdr0.cells[0].text = 'S.No'
-        hdr0.cells[1].text = 'Admi.No'
-        hdr0.cells[2].text = 'Name of the Students'
-        hdr0.cells[3].text = 'Class & Sec'
+            add_header_banner(doc, banner_type='wide')
 
-        # Row 1: Days
-        hdr1 = table.rows[1]
-        hdr1.cells[0].text = 'S.No'
-        hdr1.cells[1].text = 'Admi.No'
-        hdr1.cells[2].text = 'Name of the Students'
-        hdr1.cells[3].text = 'Class & Sec'
+            p_t = doc.add_paragraph()
+            p_t.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            p_t.paragraph_format.space_before = Pt(2)
+            p_t.paragraph_format.space_after = Pt(1)
+            r_t = p_t.add_run(f"{exam_title} ({acad_year})\nAttendance sheet")
+            r_t.font.name = 'Times New Roman'
+            r_t.font.size = Pt(12)
+            r_t.font.bold = True
 
-        for d_idx, dt in enumerate(attendance_dates):
-            c_pos = 4 + d_idx
-            raw_d = dt.get('date', '')
-            if '-' in raw_d and len(raw_d) == 10:
-                parts = raw_d.split('-')
-                disp_d = f"{parts[2]}/{parts[1]}"
-            else:
-                disp_d = raw_d
-            hdr0.cells[c_pos].text = disp_d
-            hdr1.cells[c_pos].text = dt.get('day', '')
+            p_r = doc.add_paragraph()
+            p_r.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            p_r.paragraph_format.space_before = Pt(1)
+            p_r.paragraph_format.space_after = Pt(4)
+            page_suffix = f" (Page {p_idx+1})" if len(chunks) > 1 else ""
+            r_rn = p_r.add_run(f"ROOM NAME : {rm['name']}{page_suffix} (TOTAL {rm['total_seated']})")
+            r_rn.font.name = 'Times New Roman'
+            r_rn.font.size = Pt(11)
+            r_rn.font.bold = True
 
-        # Merge headers vertically for first 4 columns
-        for c_i in range(4):
-            hdr0.cells[c_i].merge(hdr1.cells[c_i])
+            add_horizontal_straight_line(doc)
 
-        for r_hdr in [hdr0, hdr1]:
-            for c_i in range(total_cols):
-                cell = r_hdr.cells[c_i]
-                p = cell.paragraphs[0]
-                p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-                if p.runs:
-                    p.runs[0].font.name = 'Times New Roman'
-                    p.runs[0].font.size = Pt(8.5)
-                    p.runs[0].font.bold = True
-                set_cell_background(cell, 'F1F5F9')
-                set_cell_border(cell, top={"sz": 4, "val": "single", "color": "000000"},
-                                      bottom={"sz": 4, "val": "single", "color": "000000"},
-                                      left={"sz": 2, "val": "single", "color": "000000"},
-                                      right={"sz": 2, "val": "single", "color": "000000"})
+            num_date_cols = len(attendance_dates) or 8
+            total_cols = 4 + num_date_cols
 
-        for r_i, st in enumerate(students):
-            row_cells = table.rows[r_i + 2].cells
-            row_cells[0].text = str(r_i + 1)
-            row_cells[1].text = st['adm_no']
-            row_cells[2].text = st['name']
-            row_cells[3].text = st['seating_group'] or st['class_name']
+            is_last_chunk = (p_idx == len(chunks) - 1)
+            extra_rows = 4 if is_last_chunk else 0
 
-            for c_i in range(total_cols):
-                cell = row_cells[c_i]
-                p = cell.paragraphs[0]
-                p.paragraph_format.space_before = Pt(1)
-                p.paragraph_format.space_after = Pt(1)
-                p.alignment = WD_ALIGN_PARAGRAPH.CENTER if c_i in [0, 1, 3] else (WD_ALIGN_PARAGRAPH.LEFT if c_i == 2 else WD_ALIGN_PARAGRAPH.CENTER)
-                if p.runs:
-                    p.runs[0].font.name = 'Times New Roman'
-                    p.runs[0].font.size = Pt(8)
-                set_cell_border(cell, top={"sz": 2, "val": "single", "color": "CCCCCC"},
-                                      bottom={"sz": 2, "val": "single", "color": "CCCCCC"},
-                                      left={"sz": 2, "val": "single", "color": "CCCCCC"},
-                                      right={"sz": 2, "val": "single", "color": "CCCCCC"})
+            table = doc.add_table(rows=len(chunk) + 2 + extra_rows, cols=total_cols)
+            table.alignment = WD_TABLE_ALIGNMENT.CENTER
+            table.autofit = False
+            make_table_header_repeat(table, 2)
 
-        # 4 Daily summary rows inside table (TOTAL, NO. OF PRESENT, NO. OF ABSENT, SIGN. OF THE INVIGILATOR)
-        summary_rows_def = [
-            ('TOTAL', str(len(students)), True),
-            ('NO. OF PRESENT', '', False),
-            ('NO . OF ABSENT', '', False),
-            ('SIGN. OF THE INVIGILATOR', '', False)
-        ]
+            # Row 0: Dates
+            hdr0 = table.rows[0]
+            hdr0.cells[0].text = 'S.No'
+            hdr0.cells[1].text = 'Admi.No'
+            hdr0.cells[2].text = 'Name of the Students'
+            hdr0.cells[3].text = 'Class & Sec'
 
-        base_r = len(students) + 2
-        for s_idx, (label, val, is_total) in enumerate(summary_rows_def):
-            s_row = table.rows[base_r + s_idx]
-            s_row.cells[2].text = label
-            p = s_row.cells[2].paragraphs[0]
-            p.alignment = WD_ALIGN_PARAGRAPH.RIGHT if is_total else WD_ALIGN_PARAGRAPH.LEFT
-            if p.runs:
-                p.runs[0].font.name = 'Times New Roman'
-                p.runs[0].font.size = Pt(8)
-                p.runs[0].font.bold = True
+            # Row 1: Days
+            hdr1 = table.rows[1]
+            hdr1.cells[0].text = 'S.No'
+            hdr1.cells[1].text = 'Admi.No'
+            hdr1.cells[2].text = 'Name of the Students'
+            hdr1.cells[3].text = 'Class & Sec'
 
-            if is_total:
-                s_row.cells[3].text = val
-                p3 = s_row.cells[3].paragraphs[0]
-                p3.alignment = WD_ALIGN_PARAGRAPH.CENTER
-                if p3.runs:
-                    p3.runs[0].font.name = 'Times New Roman'
-                    p3.runs[0].font.size = Pt(8)
-                    p3.runs[0].font.bold = True
+            for d_idx, dt in enumerate(attendance_dates):
+                c_pos = 4 + d_idx
+                raw_d = dt.get('date', '')
+                if '-' in raw_d and len(raw_d) == 10:
+                    parts = raw_d.split('-')
+                    disp_d = f"{parts[2]}/{parts[1]}"
+                else:
+                    disp_d = raw_d
+                hdr0.cells[c_pos].text = disp_d
+                hdr1.cells[c_pos].text = dt.get('day', '')
 
-            for c_i in range(total_cols):
-                cell = s_row.cells[c_i]
-                if is_total:
+            # Merge headers vertically for first 4 columns
+            for c_i in range(4):
+                hdr0.cells[c_i].merge(hdr1.cells[c_i])
+
+            for r_hdr in [hdr0, hdr1]:
+                for c_i in range(total_cols):
+                    cell = r_hdr.cells[c_i]
+                    p = cell.paragraphs[0]
+                    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                    if p.runs:
+                        p.runs[0].font.name = 'Times New Roman'
+                        p.runs[0].font.size = Pt(8.5)
+                        p.runs[0].font.bold = True
                     set_cell_background(cell, 'F1F5F9')
-                set_cell_border(cell, top={"sz": 2, "val": "single", "color": "000000"},
-                                      bottom={"sz": 2, "val": "single", "color": "000000"},
-                                      left={"sz": 2, "val": "single", "color": "000000"},
-                                      right={"sz": 2, "val": "single", "color": "000000"})
+                    set_cell_border(cell, top={"sz": 4, "val": "single", "color": "000000"},
+                                          bottom={"sz": 4, "val": "single", "color": "000000"},
+                                          left={"sz": 2, "val": "single", "color": "000000"},
+                                          right={"sz": 2, "val": "single", "color": "000000"})
+
+            for r_i, st in enumerate(chunk):
+                global_sno = p_idx * CHUNK_SIZE + r_i + 1
+                row_cells = table.rows[r_i + 2].cells
+                row_cells[0].text = str(global_sno)
+                row_cells[1].text = st['adm_no']
+                row_cells[2].text = st['name']
+                row_cells[3].text = st['seating_group'] or st['class_name']
+
+                for c_i in range(total_cols):
+                    cell = row_cells[c_i]
+                    p = cell.paragraphs[0]
+                    p.paragraph_format.space_before = Pt(1)
+                    p.paragraph_format.space_after = Pt(1)
+                    p.alignment = WD_ALIGN_PARAGRAPH.CENTER if c_i in [0, 1, 3] else (WD_ALIGN_PARAGRAPH.LEFT if c_i == 2 else WD_ALIGN_PARAGRAPH.CENTER)
+                    if p.runs:
+                        p.runs[0].font.name = 'Times New Roman'
+                        p.runs[0].font.size = Pt(8)
+                    set_cell_border(cell, top={"sz": 2, "val": "single", "color": "CCCCCC"},
+                                          bottom={"sz": 2, "val": "single", "color": "CCCCCC"},
+                                          left={"sz": 2, "val": "single", "color": "CCCCCC"},
+                                          right={"sz": 2, "val": "single", "color": "CCCCCC"})
+
+            # 4 Daily summary rows only on the last chunk
+            if is_last_chunk:
+                summary_rows_def = [
+                    ('TOTAL', str(len(students)), True),
+                    ('NO. OF PRESENT', '', False),
+                    ('NO . OF ABSENT', '', False),
+                    ('SIGN. OF THE INVIGILATOR', '', False)
+                ]
+
+                base_r = len(chunk) + 2
+                for s_idx, (label, val, is_total) in enumerate(summary_rows_def):
+                    s_row = table.rows[base_r + s_idx]
+                    s_row.cells[2].text = label
+                    p = s_row.cells[2].paragraphs[0]
+                    p.alignment = WD_ALIGN_PARAGRAPH.RIGHT if is_total else WD_ALIGN_PARAGRAPH.LEFT
+                    if p.runs:
+                        p.runs[0].font.name = 'Times New Roman'
+                        p.runs[0].font.size = Pt(8)
+                        p.runs[0].font.bold = True
+
+                    if is_total:
+                        s_row.cells[3].text = val
+                        p3 = s_row.cells[3].paragraphs[0]
+                        p3.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                        if p3.runs:
+                            p3.runs[0].font.name = 'Times New Roman'
+                            p3.runs[0].font.size = Pt(8)
+                            p3.runs[0].font.bold = True
+
+                    for c_i in range(total_cols):
+                        cell = s_row.cells[c_i]
+                        if is_total:
+                            set_cell_background(cell, 'F1F5F9')
+                        set_cell_border(cell, top={"sz": 2, "val": "single", "color": "000000"},
+                                              bottom={"sz": 2, "val": "single", "color": "000000"},
+                                              left={"sz": 2, "val": "single", "color": "000000"},
+                                              right={"sz": 2, "val": "single", "color": "000000"})
 
     doc.save(output_path)
     return output_path
